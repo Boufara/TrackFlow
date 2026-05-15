@@ -24,6 +24,26 @@ header {
 
 header h1 { font-size: 24px; color: #58a6ff; }
 
+.global-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 24px;
+  background: #161b22;
+  border-bottom: 1px solid #2d333b;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+.global-header h1 { font-size: 20px; color: #58a6ff; margin: 0; }
+.global-header-left { display: flex; align-items: center; gap: 12px; }
+.global-header-project {
+  color: #8b949e;
+  font-size: 14px;
+  padding-left: 12px;
+  border-left: 1px solid #3d444d;
+}
+
 .btn {
   padding: 8px 16px;
   border: 1px solid #3d444d;
@@ -336,6 +356,7 @@ header h1 { font-size: 24px; color: #58a6ff; }
 .task-col-info .task-desc { font-size: 12px; color: #8b949e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .task-col-info .task-meta { font-size: 11px; color: #484f58; margin-top: 2px; }
 .task-col-info .task-assigned { color: #58a6ff; }
+.task-col-info .task-meta { display: flex; gap: 4px; flex-wrap: wrap; }
 .task-col-info .task-tag {
   display: inline-block;
   background: #1e3a5f;
@@ -345,6 +366,10 @@ header h1 { font-size: 24px; color: #58a6ff; }
   font-size: 11px;
   font-weight: 500;
 }
+.task-col-info .task-tag.time-tag {
+  background: #2d333b;
+  color: #8b949e;
+}
 
 .task-col-status {
   width: 80px;
@@ -352,11 +377,47 @@ header h1 { font-size: 24px; color: #58a6ff; }
   flex-shrink: 0;
 }
 
+.task-col-hours {
+  width: 70px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.hours-badge {
+  display: inline-block;
+  background: #1e3a5f;
+  color: #58a6ff;
+  border-radius: 8px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.hours-badge.total {
+  background: #0d3321;
+  color: #3fb950;
+}
+
 .task-col-actions {
   width: 40px;
   text-align: center;
   flex-shrink: 0;
 }
+
+.task-table-footer {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  border-top: 1px solid #2d333b;
+  background: #1c2129;
+  font-size: 13px;
+  color: #8b949e;
+}
+
+.sort-header {
+  cursor: pointer;
+  user-select: none;
+}
+.sort-header:hover { opacity: 0.8; }
 
 .status-dot {
   display: inline-block;

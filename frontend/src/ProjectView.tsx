@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import type { Project, TaskItem, ProjectMember, AppUser } from './api';
-import { getTasks, createTask, deleteTask, updateTask, getMembers, addMember, removeMember, getUsers, getCurrentUser } from './api';
+import type { Project, TaskItem, ProjectMember, AppUser, TimeStats } from './api';
+import { getTasks, createTask, deleteTask, updateTask, getMembers, addMember, removeMember, getUsers, getCurrentUser, getTimeStats } from './api';
 import { TaskModal } from './TaskModal';
 
-const STATUSES = ['todo', 'in_progress', 'to_review', 'validated', 'rejected', 'a_discuter'];
+const STATUSES = ['a_discuter', 'todo', 'in_progress', 'to_review', 'validated', 'rejected'];
 const STATUS_LABELS: Record<string, string> = {
   todo: 'A faire',
   in_progress: 'En cours',
@@ -20,6 +20,19 @@ const STATUS_COLORS: Record<string, string> = {
   rejected: '#f85149',
   a_discuter: '#bc8cff',
 };
+
+type SortKey = 'id' | 'priority' | 'status' | 'hours';
+type SortDir = 'asc' | 'desc';
+
+const PRIORITY_ORDER: Record<string, number> = { high: 3, medium: 2, low: 1 };
+const STATUS_ORDER: Record<string, number> = { a_discuter: 0, todo: 1, in_progress: 2, to_review: 3, validated: 4, rejected: 5 };
+
+function formatDuration(mins: number) {
+  if (mins <= 0) return '';
+  const h = Math.floor(mins / 60);
+  const m = Math.round(mins % 60);
+  return h > 0 ? `${h}h${m > 0 ? ` ${m}m` : ''}` : `${m}m`;
+}
 
 interface Props {
   project: Project;
@@ -39,11 +52,14 @@ export function ProjectView({ project, onBack }: Props) {
   const [filterPriority, setFilterPriority] = useState('');
   const [filterAssigned, setFilterAssigned] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
+  const [timeStats, setTimeStats] = useState<Record<number, TimeStats>>({});
+  const [sortKey, setSortKey] = useState<SortKey>('priority');
+  const [sortDir, setSortDir] = useState<SortDir>('desc');
 
   const currentUser = getCurrentUser();
   const isAdmin = currentUser?.isAdmin ?? false;
 
-  const load = () => getTasks(project.id).then(setTasks);
+  const load = () => { getTasks(project.id).then(setTasks); getTimeStats(project.id).then(setTimeStats); };
   const loadMembers = () => getMembers(project.id).then(setMembers);
 
   useEffect(() => { load(); loadMembers(); }, [project.id]);
@@ -72,6 +88,9 @@ export function ProjectView({ project, onBack }: Props) {
     if (newStatus === 'in_progress' && !task.assignedTo && currentUser) {
       update.assignedTo = currentUser.displayName;
     }
+    if (newStatus === 'todo' && task.assignedTo && (!timeStats[task.id] || timeStats[task.id].users.length === 0)) {
+      update.assignedTo = '';
+    }
     await updateTask(task.id, update);
     load();
   };
@@ -88,7 +107,11 @@ export function ProjectView({ project, onBack }: Props) {
     loadMembers();
   };
 
-  // Build assignee list from members + any assigned names in tasks
+  const toggleSort = (key: SortKey) => {
+    if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    else { setSortKey(key); setSortDir('desc'); }
+  };
+
   const assigneeNames = Array.from(new Set([
     ...members.map(m => m.userName),
     ...tasks.map(t => t.assignedTo).filter(Boolean)
@@ -102,7 +125,23 @@ export function ProjectView({ project, onBack }: Props) {
     if (filterAssigned && filterAssigned !== '_none' && t.assignedTo !== filterAssigned) return false;
     return true;
   });
+
+  const sorted = [...filtered].sort((a, b) => {
+    let cmp = 0;
+    switch (sortKey) {
+      case 'id': cmp = a.id - b.id; break;
+      case 'priority': cmp = (PRIORITY_ORDER[a.priority] || 0) - (PRIORITY_ORDER[b.priority] || 0); break;
+      case 'status': cmp = (STATUS_ORDER[a.status] || 0) - (STATUS_ORDER[b.status] || 0); break;
+      case 'hours': cmp = (timeStats[a.id]?.totalMinutes || 0) - (timeStats[b.id]?.totalMinutes || 0); break;
+    }
+    return sortDir === 'asc' ? cmp : -cmp;
+  });
+
+  const totalAllMinutes = Object.values(timeStats).reduce((sum, s) => sum + s.totalMinutes, 0);
+
   const nonMembers = allUsers.filter(u => !members.some(m => m.userId === u.id));
+
+  const sortArrow = (key: SortKey) => sortKey === key ? (sortDir === 'asc' ? ' ▲' : ' ▼') : '';
 
   return (
     <div className="app wide">
@@ -113,7 +152,7 @@ export function ProjectView({ project, onBack }: Props) {
         </div>
         <div className="header-actions">
           <button className="btn small" onClick={load} title="Rafraichir">↻</button>
-          {isAdmin && <button className="btn small" onClick={() => setShowMembers(!showMembers)}>Membres ({members.length})</button>}
+          {isAdmin && <button className="btn small" onClick={() => setShowMembers(!showMembers)}>Membres ({members.length}) {showMembers ? '▲' : '▼'}</button>}
           <button className="btn primary" onClick={() => setShowForm(!showForm)}>+ Nouvelle tache</button>
         </div>
       </div>
@@ -188,42 +227,68 @@ export function ProjectView({ project, onBack }: Props) {
 
       <div className="task-table">
         <div className="task-table-header">
-          <div className="task-col-info">Tache</div>
+          <div className="task-col-info sort-header" onClick={() => toggleSort('id')}>
+            Tache{sortArrow('id')}
+          </div>
           {STATUSES.map(s => (
-            <div key={s} className="task-col-status" style={{ color: STATUS_COLORS[s] }}>{STATUS_LABELS[s]}</div>
+            <div key={s} className="task-col-status sort-header" style={{ color: STATUS_COLORS[s] }} onClick={() => toggleSort('status')}>
+              {STATUS_LABELS[s]}
+            </div>
           ))}
+          <div className="task-col-hours sort-header" onClick={() => toggleSort('hours')}>
+            Heures{sortArrow('hours')}
+          </div>
           <div className="task-col-actions"></div>
         </div>
-        {filtered.map(task => (
-          <div key={task.id} className={`task-table-row priority-${task.priority}`}>
-            <div className="task-col-info" onClick={() => setSelectedTask(task)}>
-              <span className="task-title"><span className="task-id">#{task.id}</span> {task.title}</span>
-              {task.description && <span className="task-desc">{task.description}</span>}
-              {task.assignedTo && (
-                <span className="task-meta">
-                  <span className="task-tag">{task.assignedTo}</span>
-                </span>
-              )}
-            </div>
-            {STATUSES.map(s => (
-              <div key={s} className="task-col-status">
-                {task.status === s ? (
-                  <span className="status-dot active" style={{ background: STATUS_COLORS[s] }} title={STATUS_LABELS[s]} />
-                ) : (
-                  <button
-                    className="status-dot clickable"
-                    title={`Deplacer vers ${STATUS_LABELS[s]}`}
-                    onClick={() => handleStatusChange(task, s)}
-                  />
+        {sorted.map(task => {
+          const stats = timeStats[task.id];
+          return (
+            <div key={task.id} className={`task-table-row priority-${task.priority}`}>
+              <div className="task-col-info" onClick={() => setSelectedTask(task)}>
+                <span className="task-title"><span className="task-id">#{task.id}</span> {task.title}</span>
+                {task.description && <span className="task-desc">{task.description}</span>}
+                {(task.assignedTo || (stats && stats.users.length > 0)) && (
+                  <span className="task-meta">
+                    {task.assignedTo && <span className="task-tag">{task.assignedTo}</span>}
+                    {stats?.users.filter(u => u !== task.assignedTo).map(u => (
+                      <span key={u} className="task-tag time-tag">{u}</span>
+                    ))}
+                  </span>
                 )}
               </div>
-            ))}
-            <div className="task-col-actions">
-              <button className="btn danger small" onClick={() => handleDelete(task.id)} style={{ fontSize: 10, padding: '2px 6px' }}>x</button>
+              {STATUSES.map(s => (
+                <div key={s} className="task-col-status">
+                  {task.status === s ? (
+                    <span className="status-dot active" style={{ background: STATUS_COLORS[s] }} title={STATUS_LABELS[s]} />
+                  ) : (
+                    <button
+                      className="status-dot clickable"
+                      title={`Deplacer vers ${STATUS_LABELS[s]}`}
+                      onClick={() => handleStatusChange(task, s)}
+                    />
+                  )}
+                </div>
+              ))}
+              <div className="task-col-hours">
+                {stats && stats.totalMinutes > 0 && (
+                  <span className="hours-badge">{formatDuration(stats.totalMinutes)}</span>
+                )}
+              </div>
+              <div className="task-col-actions">
+                <button className="btn danger small" onClick={() => handleDelete(task.id)} style={{ fontSize: 10, padding: '2px 6px' }}>x</button>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
         {filtered.length === 0 && <div style={{ padding: 20, textAlign: 'center', color: '#484f58' }}>Aucune tache</div>}
+        {totalAllMinutes > 0 && (
+          <div className="task-table-footer">
+            <div className="task-col-info" />
+            {STATUSES.map(s => <div key={s} className="task-col-status" />)}
+            <div className="task-col-hours"><span className="hours-badge total">{formatDuration(totalAllMinutes)}</span></div>
+            <div className="task-col-actions" />
+          </div>
+        )}
       </div>
 
       {selectedTask && (

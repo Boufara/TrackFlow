@@ -125,6 +125,10 @@ export const createTimeEntry = (taskId: number, t: Partial<TimeEntry>) => reques
 export const updateTimeEntry = (id: number, t: Partial<TimeEntry>) => request<TimeEntry>(`${API}/time-entries/${id}`, { method: 'PUT', body: JSON.stringify(t) });
 export const deleteTimeEntry = (id: number) => request<void>(`${API}/time-entries/${id}`, { method: 'DELETE' });
 
+// Time stats per task
+export interface TimeStats { users: string[]; totalMinutes: number; }
+export const getTimeStats = (projectId: number) => request<Record<number, TimeStats>>(`${API}/projects/${projectId}/time-stats`);
+
 // Git
 export const getBranches = (projectId: number) => request<string[]>(`${API}/projects/${projectId}/git/branches`);
 export const getCommits = (projectId: number, branch?: string) => request<GitCommit[]>(`${API}/projects/${projectId}/git/commits${branch ? `?branch=${encodeURIComponent(branch)}` : ''}`);

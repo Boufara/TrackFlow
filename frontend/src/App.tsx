@@ -41,51 +41,59 @@ function App() {
     return <LoginPage onLogin={() => setLoggedIn(true)} />;
   }
 
-  if (page === 'users' && isAdmin) {
-    return <UsersPage onBack={() => setPage('projects')} />;
-  }
-
-  if (selected) {
-    return <ProjectView project={selected} onBack={() => setSelected(null)} />;
-  }
-
   return (
-    <div className="app">
-      <header>
-        <h1>TrackFlow</h1>
+    <div>
+      <header className="global-header">
+        <div className="global-header-left">
+          <h1 onClick={() => { setSelected(null); setPage('projects'); }} style={{ cursor: 'pointer' }}>TrackFlow</h1>
+          {selected && <span className="global-header-project">{selected.name}</span>}
+          {page === 'users' && <span className="global-header-project">Utilisateurs</span>}
+        </div>
         <div className="header-actions">
           <span style={{ color: '#8b949e', fontSize: 14 }}>{user?.displayName}</span>
-          {isAdmin && <button className="btn small" onClick={() => setPage('users')}>Utilisateurs</button>}
-          {isAdmin && <button className="btn primary" onClick={() => setShowForm(!showForm)}>+ Nouveau projet</button>}
-          <button className="btn danger small" onClick={() => { logout(); setLoggedIn(false); }}>Deconnexion</button>
+          {isAdmin && !selected && page === 'projects' && (
+            <button className="btn small" onClick={() => setPage('users')}>Utilisateurs</button>
+          )}
+          {isAdmin && !selected && page === 'projects' && (
+            <button className="btn primary" onClick={() => setShowForm(!showForm)}>+ Nouveau projet</button>
+          )}
+          <button className="btn danger small" onClick={() => { logout(); setLoggedIn(false); setSelected(null); setPage('projects'); }}>Deconnexion</button>
         </div>
       </header>
 
-      {showForm && isAdmin && (
-        <div className="form-card">
-          <input placeholder="Nom du projet" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
-          <input placeholder="Description (optionnel)" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
-          <input placeholder="Chemin du repo git" value={form.repoPath} onChange={e => setForm({ ...form, repoPath: e.target.value })} />
-          <div className="form-actions">
-            <button className="btn primary" onClick={handleCreate}>Creer</button>
-            <button className="btn" onClick={() => setShowForm(false)}>Annuler</button>
+      {page === 'users' && isAdmin ? (
+        <UsersPage onBack={() => setPage('projects')} />
+      ) : selected ? (
+        <ProjectView project={selected} onBack={() => setSelected(null)} />
+      ) : (
+        <div className="app">
+          {showForm && isAdmin && (
+            <div className="form-card">
+              <input placeholder="Nom du projet" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
+              <input placeholder="Description (optionnel)" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
+              <input placeholder="Chemin du repo git" value={form.repoPath} onChange={e => setForm({ ...form, repoPath: e.target.value })} />
+              <div className="form-actions">
+                <button className="btn primary" onClick={handleCreate}>Creer</button>
+                <button className="btn" onClick={() => setShowForm(false)}>Annuler</button>
+              </div>
+            </div>
+          )}
+
+          <div className="project-list">
+            {projects.map(p => (
+              <div key={p.id} className="project-card" onClick={() => setSelected(p)}>
+                <div className="project-info">
+                  <h3>{p.name}</h3>
+                  {p.description && <p>{p.description}</p>}
+                  <small>{p.repoPath}</small>
+                </div>
+                {isAdmin && <button className="btn danger small" onClick={e => { e.stopPropagation(); handleDelete(p.id); }}>Supprimer</button>}
+              </div>
+            ))}
+            {projects.length === 0 && <p className="empty">Aucun projet. Creez-en un pour commencer.</p>}
           </div>
         </div>
       )}
-
-      <div className="project-list">
-        {projects.map(p => (
-          <div key={p.id} className="project-card" onClick={() => setSelected(p)}>
-            <div className="project-info">
-              <h3>{p.name}</h3>
-              {p.description && <p>{p.description}</p>}
-              <small>{p.repoPath}</small>
-            </div>
-            {isAdmin && <button className="btn danger small" onClick={e => { e.stopPropagation(); handleDelete(p.id); }}>Supprimer</button>}
-          </div>
-        ))}
-        {projects.length === 0 && <p className="empty">Aucun projet. Creez-en un pour commencer.</p>}
-      </div>
     </div>
   );
 }

@@ -229,6 +229,22 @@ app.MapDelete("/api/tasks/{id}", async (int id, TrackFlowDb db) =>
 
 // === TIME ENTRIES ===
 
+app.MapGet("/api/projects/{projectId}/time-stats", async (int projectId, TrackFlowDb db) =>
+{
+    var taskIds = await db.Tasks.Where(t => t.ProjectId == projectId).Select(t => t.Id).ToListAsync();
+    var entries = await db.TimeEntries
+        .Where(e => taskIds.Contains(e.TaskId))
+        .GroupBy(e => e.TaskId)
+        .Select(g => new
+        {
+            TaskId = g.Key,
+            Users = g.Where(e => e.User != null && e.User != "").Select(e => e.User!).Distinct().ToList(),
+            TotalMinutes = g.Sum(e => (e.EndTime - e.StartTime).TotalMinutes)
+        })
+        .ToListAsync();
+    return Results.Ok(entries.ToDictionary(x => x.TaskId, x => new { x.Users, x.TotalMinutes }));
+}).RequireAuthorization();
+
 app.MapGet("/api/tasks/{taskId}/time-entries", async (int taskId, TrackFlowDb db) =>
     await db.TimeEntries.Where(t => t.TaskId == taskId)
         .OrderByDescending(t => t.StartTime)
@@ -237,6 +253,8 @@ app.MapGet("/api/tasks/{taskId}/time-entries", async (int taskId, TrackFlowDb db
 app.MapPost("/api/tasks/{taskId}/time-entries", async (int taskId, TimeEntry entry, TrackFlowDb db) =>
 {
     entry.TaskId = taskId;
+    entry.StartTime = DateTime.SpecifyKind(entry.StartTime, DateTimeKind.Utc);
+    entry.EndTime = DateTime.SpecifyKind(entry.EndTime, DateTimeKind.Utc);
     db.TimeEntries.Add(entry);
     await db.SaveChangesAsync();
     return Results.Created($"/api/tasks/{taskId}/time-entries/{entry.Id}", entry);
@@ -246,8 +264,8 @@ app.MapPut("/api/time-entries/{id}", async (int id, TimeEntry input, TrackFlowDb
 {
     var entry = await db.TimeEntries.FindAsync(id);
     if (entry is null) return Results.NotFound();
-    entry.StartTime = input.StartTime;
-    entry.EndTime = input.EndTime;
+    entry.StartTime = DateTime.SpecifyKind(input.StartTime, DateTimeKind.Utc);
+    entry.EndTime = DateTime.SpecifyKind(input.EndTime, DateTimeKind.Utc);
     entry.User = input.User;
     entry.Note = input.Note;
     await db.SaveChangesAsync();

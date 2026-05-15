@@ -5,7 +5,7 @@ import {
   getBranches, getCommits, getCurrentUser,
 } from './api';
 
-const STATUSES = ['todo', 'in_progress', 'to_review', 'validated', 'rejected', 'a_discuter'];
+const STATUSES = ['a_discuter', 'todo', 'in_progress', 'to_review', 'validated', 'rejected'];
 const STATUS_LABELS: Record<string, string> = {
   todo: 'A faire',
   in_progress: 'En cours',
@@ -26,7 +26,7 @@ export function TaskModal({ task, projectId, members, onClose }: Props) {
   const [form, setForm] = useState(task);
   const [entries, setEntries] = useState<TimeEntry[]>([]);
   const currentUser = getCurrentUser();
-  const [newEntry, setNewEntry] = useState({ user: currentUser?.displayName || '', startTime: '', endTime: '', note: '' });
+  const [newEntry, setNewEntry] = useState({ startTime: '', endTime: '', note: '' });
   const [branches, setBranches] = useState<string[]>([]);
   const [commits, setCommits] = useState<GitCommit[]>([]);
   const [selectedBranch, setSelectedBranch] = useState(task.branchName || '');
@@ -50,8 +50,14 @@ export function TaskModal({ task, projectId, members, onClose }: Props) {
 
   const handleAddEntry = async () => {
     if (!newEntry.startTime || !newEntry.endTime) return;
-    await createTimeEntry(task.id, newEntry);
-    setNewEntry({ user: '', startTime: '', endTime: '', note: '' });
+    await createTimeEntry(task.id, { ...newEntry, user: currentUser?.displayName || '' });
+    const nextStart = newEntry.endTime;
+    const [date, time] = nextStart.split('T');
+    const [h, m] = time.split(':').map(Number);
+    const totalMin = h * 60 + m + 15;
+    const eh = String(Math.floor(totalMin / 60) % 24).padStart(2, '0');
+    const em = String(totalMin % 60).padStart(2, '0');
+    setNewEntry({ ...newEntry, startTime: nextStart, endTime: `${date}T${eh}:${em}` });
     getTimeEntries(task.id).then(setEntries);
   };
 
@@ -196,32 +202,43 @@ export function TaskModal({ task, projectId, members, onClose }: Props) {
             );
           })}
 
-          <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
-            <input
-              type="datetime-local"
-              style={{ padding: '4px 8px', background: '#0d1117', border: '1px solid #3d444d', borderRadius: 4, color: '#e1e4e8', fontSize: 12 }}
-              value={newEntry.startTime}
-              onChange={e => setNewEntry({ ...newEntry, startTime: e.target.value })}
-            />
-            <input
-              type="datetime-local"
-              style={{ padding: '4px 8px', background: '#0d1117', border: '1px solid #3d444d', borderRadius: 4, color: '#e1e4e8', fontSize: 12 }}
-              value={newEntry.endTime}
-              onChange={e => setNewEntry({ ...newEntry, endTime: e.target.value })}
-            />
-            <input
-              placeholder="Qui"
-              style={{ padding: '4px 8px', background: '#0d1117', border: '1px solid #3d444d', borderRadius: 4, color: '#e1e4e8', fontSize: 12, width: 80 }}
-              value={newEntry.user}
-              onChange={e => setNewEntry({ ...newEntry, user: e.target.value })}
-            />
-            <input
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
+            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+              <span style={{ color: '#8b949e', fontSize: 12 }}>De</span>
+              <input
+                type="datetime-local"
+                style={{ padding: '4px 8px', background: '#0d1117', border: '1px solid #3d444d', borderRadius: 4, color: '#e1e4e8', fontSize: 12 }}
+                value={newEntry.startTime}
+                onChange={e => {
+                  const start = e.target.value;
+                  if (!start) { setNewEntry({ ...newEntry, startTime: '' }); return; }
+                  const [date, time] = start.split('T');
+                  const [h, m] = time.split(':').map(Number);
+                  const totalMin = h * 60 + m + 15;
+                  const eh = String(Math.floor(totalMin / 60) % 24).padStart(2, '0');
+                  const em = String(totalMin % 60).padStart(2, '0');
+                  setNewEntry({ ...newEntry, startTime: start, endTime: `${date}T${eh}:${em}` });
+                }}
+              />
+              <span style={{ color: '#8b949e', fontSize: 12 }}>A</span>
+              <input
+                type="datetime-local"
+                style={{ padding: '4px 8px', background: '#0d1117', border: '1px solid #3d444d', borderRadius: 4, color: '#e1e4e8', fontSize: 12 }}
+                value={newEntry.endTime}
+                min={newEntry.startTime}
+                onChange={e => {
+                  if (newEntry.startTime && e.target.value < newEntry.startTime) return;
+                  setNewEntry({ ...newEntry, endTime: e.target.value });
+                }}
+              />
+              <button className="btn primary small" onClick={handleAddEntry}>+</button>
+            </div>
+            <textarea
               placeholder="Description (optionnel)"
-              style={{ padding: '4px 8px', background: '#0d1117', border: '1px solid #3d444d', borderRadius: 4, color: '#e1e4e8', fontSize: 12, flex: 1 }}
+              style={{ padding: '6px 8px', background: '#0d1117', border: '1px solid #3d444d', borderRadius: 4, color: '#e1e4e8', fontSize: 12, width: '100%', minHeight: 32, resize: 'vertical' }}
               value={newEntry.note}
               onChange={e => setNewEntry({ ...newEntry, note: e.target.value })}
             />
-            <button className="btn primary small" onClick={handleAddEntry}>+</button>
           </div>
         </div>
 
