@@ -1,0 +1,229 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #0f1117;
+  color: #e1e4e8;
+  min-height: 100vh;
+}
+
+.app {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  border-bottom: 1px solid #2d333b;
+  padding-bottom: 16px;
+}
+
+header h1 { font-size: 24px; color: #58a6ff; }
+
+.btn {
+  padding: 8px 16px;
+  border: 1px solid #3d444d;
+  border-radius: 6px;
+  background: #21262d;
+  color: #e1e4e8;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.15s;
+}
+.btn:hover { background: #30363d; }
+.btn.primary { background: #238636; border-color: #2ea043; color: #fff; }
+.btn.primary:hover { background: #2ea043; }
+.btn.danger { background: #b62324; border-color: #da3633; color: #fff; }
+.btn.danger:hover { background: #da3633; }
+.btn.small { padding: 4px 10px; font-size: 12px; }
+
+.form-card {
+  background: #161b22;
+  border: 1px solid #2d333b;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.form-card input, .form-card select, .form-card textarea {
+  padding: 8px 12px;
+  background: #0d1117;
+  border: 1px solid #3d444d;
+  border-radius: 6px;
+  color: #e1e4e8;
+  font-size: 14px;
+}
+.form-card textarea { min-height: 60px; resize: vertical; }
+
+.form-actions { display: flex; gap: 8px; }
+
+.project-list { display: flex; flex-direction: column; gap: 8px; }
+
+.project-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #161b22;
+  border: 1px solid #2d333b;
+  border-radius: 8px;
+  padding: 16px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.project-card:hover { border-color: #58a6ff; }
+.project-info h3 { color: #58a6ff; margin-bottom: 4px; }
+.project-info p { color: #8b949e; font-size: 14px; }
+.project-info small { color: #484f58; font-size: 12px; }
+
+.empty { color: #484f58; text-align: center; padding: 40px; }
+
+/* Task board */
+.project-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.project-header h2 { color: #58a6ff; }
+.header-actions { display: flex; gap: 8px; }
+
+.status-columns {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.status-column {
+  background: #161b22;
+  border: 1px solid #2d333b;
+  border-radius: 8px;
+  padding: 12px;
+  min-height: 200px;
+}
+.status-column h4 {
+  text-align: center;
+  padding: 6px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.col-todo h4 { background: #1f2937; color: #9ca3af; }
+.col-in_progress h4 { background: #1e3a5f; color: #58a6ff; }
+.col-to_review h4 { background: #3b2f04; color: #d29922; }
+.col-validated h4 { background: #0d3321; color: #3fb950; }
+.col-rejected h4 { background: #3d1214; color: #f85149; }
+
+.task-card {
+  background: #0d1117;
+  border: 1px solid #2d333b;
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.task-card:hover { border-color: #58a6ff; }
+.task-card .title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+.task-card .meta { font-size: 11px; color: #484f58; display: flex; justify-content: space-between; }
+
+.priority-high { border-left: 3px solid #f85149; }
+.priority-medium { border-left: 3px solid #d29922; }
+.priority-low { border-left: 3px solid #3fb950; }
+
+/* Task detail modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 60px;
+  z-index: 100;
+}
+
+.modal {
+  background: #161b22;
+  border: 1px solid #2d333b;
+  border-radius: 10px;
+  padding: 24px;
+  width: 700px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.modal h3 { color: #58a6ff; margin-bottom: 16px; }
+.modal label { display: block; font-size: 12px; color: #8b949e; margin-bottom: 4px; margin-top: 12px; }
+.modal .field { margin-bottom: 8px; }
+
+.modal .status-select {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.modal .status-btn {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  border: 1px solid #3d444d;
+  background: #21262d;
+  color: #8b949e;
+  cursor: pointer;
+}
+.modal .status-btn.active { border-color: #58a6ff; color: #58a6ff; background: #1e3a5f; }
+
+/* Time entries */
+.time-entries { margin-top: 16px; }
+.time-entry {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid #2d333b;
+  font-size: 13px;
+}
+.time-entry .duration { color: #58a6ff; font-weight: 600; min-width: 60px; }
+
+/* Git selector */
+.git-section { margin-top: 16px; border-top: 1px solid #2d333b; padding-top: 12px; }
+.git-section h4 { color: #d29922; margin-bottom: 8px; }
+.commit-list {
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #2d333b;
+  border-radius: 6px;
+}
+.commit-item {
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid #1e2229;
+}
+.commit-item:hover { background: #1e3a5f; }
+.commit-item.selected { background: #0d3321; border-color: #3fb950; }
+.commit-item .hash { color: #58a6ff; font-family: monospace; min-width: 70px; }
+.commit-item .msg { color: #e1e4e8; flex: 1; }
+.commit-item .author { color: #8b949e; min-width: 80px; text-align: right; }
+
+.count-badge {
+  display: inline-block;
+  background: #30363d;
+  color: #8b949e;
+  border-radius: 10px;
+  padding: 0 6px;
+  font-size: 12px;
+  margin-left: 6px;
+}
