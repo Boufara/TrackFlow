@@ -22,17 +22,17 @@ Gestionnaire de tâches multi-projet avec suivi du temps et intégration Git.
 ## Développement
 
 ```bash
-# Prérequis : Node.js, .NET 10 SDK, PostgreSQL
+# Prérequis : Node.js, .NET 10 SDK, PostgreSQL, Git
 
 # Installer les dépendances frontend
 cd frontend && npm install
 
-# Lancer (backend + frontend)
+# Lancer (backend port 5202 + frontend port 5200)
 powershell -ExecutionPolicy Bypass -File start.ps1
 ```
 
 - Frontend : http://localhost:5200
-- Backend : http://localhost:5201
+- Backend (dev) : http://localhost:5202
 - Connexion par défaut : `admin` / `admin`
 
 ## Déploiement
@@ -40,5 +40,8 @@ powershell -ExecutionPolicy Bypass -File start.ps1
 Voir [DEPLOY.md](DEPLOY.md) pour le guide complet.
 
 ```bash
+# Build pour production
 powershell -ExecutionPolicy Bypass -File deploy.ps1
+
+# Production tourne sur le port 5201
 ```

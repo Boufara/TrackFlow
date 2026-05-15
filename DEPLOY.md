@@ -7,6 +7,7 @@
 ## Prérequis
 
 - .NET 10 Runtime
+- Git for Windows (`C:\Program Files\Git\cmd\git.exe`)
 - Port 5201 ouvert dans le firewall (TCP, entrant)
 
 ## Premier déploiement
@@ -44,9 +45,12 @@ Modifier `C:\TrackFlow\appsettings.json` :
   },
   "Jwt": {
     "Key": "UneCleSuperSecrete-Production-2026!"
-  }
+  },
+  "Urls": "http://0.0.0.0:5201"
 }
 ```
+
+> **Important** : `0.0.0.0` permet l'accès depuis d'autres machines. `localhost` ne serait accessible que localement.
 
 ### Étape 5 — Ouvrir le port 5201
 
@@ -57,7 +61,7 @@ netsh advfirewall firewall add rule name="TrackFlow" dir=in action=allow protoco
 ### Étape 6 — Créer la tâche planifiée (démarrage auto)
 
 ```powershell
-schtasks /create /tn "TrackFlow" /tr "cmd /c \"C:\Program Files\dotnet\dotnet.exe\" C:\TrackFlow\TrackFlow.dll --urls http://0.0.0.0:5201" /sc onstart /ru SYSTEM /rl HIGHEST
+schtasks /create /tn "TrackFlow" /tr "cmd /c \"C:\Program Files\dotnet\dotnet.exe\" C:\TrackFlow\TrackFlow.dll" /sc onstart /ru SYSTEM /rl HIGHEST
 schtasks /run /tn "TrackFlow"
 ```
 
@@ -73,17 +77,29 @@ Connexion par défaut : `admin` / `admin`
 # 1. Build sur la machine de dev
 powershell -ExecutionPolicy Bypass -File deploy.ps1
 
-# 2. Arrêter TrackFlow sur le serveur
+# 2. Arrêter TrackFlow sur le serveur (PowerShell admin)
 schtasks /end /tn "TrackFlow"
+taskkill /IM TrackFlow.exe /F   # si le process reste actif
 
 # 3. Copier deploy/ → C:\TrackFlow\ (écraser les fichiers)
 #    IMPORTANT: ne pas écraser appsettings.json si déjà configuré
+robocopy deploy C:\TrackFlow /E /XF appsettings.json
 
 # 4. Relancer
 schtasks /run /tn "TrackFlow"
 ```
 
+## Développement local (sans toucher à la prod)
+
+```powershell
+powershell -ExecutionPolicy Bypass -File start.ps1
+```
+
+Lance le backend sur le port **5202** et le frontend sur **5200**.
+La prod sur le port 5201 n'est pas affectée.
+
 ## Notes
 
-- Chaque utilisateur peut configurer son propre chemin de repo git dans le projet (champ "Mon dossier git")
+- Git doit être installé sur le serveur (`C:\Program Files\Git\cmd\git.exe`)
 - Les migrations DB s'appliquent automatiquement au démarrage
+- Le repo git du projet doit être accessible depuis le chemin configuré dans "Repo path"
