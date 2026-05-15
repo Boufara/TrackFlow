@@ -1,17 +1,10 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { Project, TaskItem, ProjectMember, AppUser, TimeStats } from './api';
 import { getTasks, createTask, deleteTask, updateTask, getMembers, addMember, removeMember, getUsers, getCurrentUser, getTimeStats } from './api';
 import { TaskModal } from './TaskModal';
 
 const STATUSES = ['a_discuter', 'todo', 'in_progress', 'to_review', 'validated', 'rejected'];
-const STATUS_LABELS: Record<string, string> = {
-  todo: 'A faire',
-  in_progress: 'En cours',
-  to_review: 'A tester',
-  validated: 'Valide',
-  rejected: 'Rejete',
-  a_discuter: 'A discuter',
-};
 const STATUS_COLORS: Record<string, string> = {
   todo: '#9ca3af',
   in_progress: '#58a6ff',
@@ -40,6 +33,7 @@ interface Props {
 }
 
 export function ProjectView({ project, onBack }: Props) {
+  const { t } = useTranslation();
   const [tasks, setTasks] = useState<TaskItem[]>([]);
   const [members, setMembers] = useState<ProjectMember[]>([]);
   const [allUsers, setAllUsers] = useState<AppUser[]>([]);
@@ -74,7 +68,7 @@ export function ProjectView({ project, onBack }: Props) {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Supprimer cette tache ?')) return;
+    if (!confirm(t('confirmDeleteTask'))) return;
     await deleteTask(id);
     load();
   };
@@ -138,30 +132,28 @@ export function ProjectView({ project, onBack }: Props) {
   });
 
   const totalAllMinutes = Object.values(timeStats).reduce((sum, s) => sum + s.totalMinutes, 0);
-
   const nonMembers = allUsers.filter(u => !members.some(m => m.userId === u.id));
-
   const sortArrow = (key: SortKey) => sortKey === key ? (sortDir === 'asc' ? ' ▲' : ' ▼') : '';
 
   return (
     <div className="app wide">
       <div className="project-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button className="btn" onClick={onBack}>← Retour</button>
+          <button className="btn small" onClick={onBack}>{t('back')}</button>
           <h2>{project.name}</h2>
         </div>
         <div className="header-actions">
-          <button className="btn small" onClick={load} title="Rafraichir">↻</button>
-          {isAdmin && <button className="btn small" onClick={() => setShowMembers(!showMembers)}>Membres ({members.length}) {showMembers ? '▲' : '▼'}</button>}
-          <button className="btn primary" onClick={() => setShowForm(!showForm)}>+ Nouvelle tache</button>
+          <button className="btn small" onClick={load} title={t('refresh')}>↻</button>
+          {isAdmin && <button className="btn small" onClick={() => setShowMembers(!showMembers)}>{t('members')} ({members.length}) {showMembers ? '▲' : '▼'}</button>}
+          <button className="btn primary small" onClick={() => setShowForm(!showForm)}>{t('newTask')}</button>
         </div>
       </div>
 
       {showMembers && isAdmin && (
         <div className="form-card">
-          <h4 style={{ color: '#58a6ff', marginBottom: 8 }}>Membres du projet</h4>
+          <h4 style={{ color: 'var(--accent)', marginBottom: 8 }}>{t('projectMembers')}</h4>
           {members.map(m => (
-            <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0', borderBottom: '1px solid #2d333b' }}>
+            <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0', borderBottom: '1px solid var(--border)' }}>
               <span style={{ flex: 1 }}>{m.userName}</span>
               <button className="btn danger small" onClick={() => handleRemoveMember(m.id)}>x</button>
             </div>
@@ -169,8 +161,8 @@ export function ProjectView({ project, onBack }: Props) {
           {nonMembers.length > 0 && (
             <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
               <select value={addUserId} onChange={e => setAddUserId(e.target.value)}
-                style={{ flex: 1, padding: '6px 10px', background: '#0d1117', border: '1px solid #3d444d', borderRadius: 6, color: '#e1e4e8' }}>
-                <option value="">-- Ajouter un membre --</option>
+                style={{ flex: 1, padding: '6px 10px', background: 'var(--bg-input)', border: '1px solid var(--border-input)', borderRadius: 6, color: 'var(--text-primary)' }}>
+                <option value="">{t('addMember')}</option>
                 {nonMembers.map(u => <option key={u.id} value={u.id}>{u.displayName}</option>)}
               </select>
               <button className="btn primary small" onClick={handleAddMember}>+</button>
@@ -181,62 +173,62 @@ export function ProjectView({ project, onBack }: Props) {
 
       {showForm && (
         <div className="form-card">
-          <input placeholder="Titre de la tache" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
-          <textarea placeholder="Description (optionnel)" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
+          <input placeholder={t('taskTitle')} value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
+          <textarea placeholder={t('descriptionOptional')} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
           <div style={{ display: 'flex', gap: 10 }}>
             <select value={form.priority} onChange={e => setForm({ ...form, priority: e.target.value })}>
-              <option value="low">Basse</option>
-              <option value="medium">Moyenne</option>
-              <option value="high">Haute</option>
+              <option value="low">{t('low')}</option>
+              <option value="medium">{t('medium')}</option>
+              <option value="high">{t('high')}</option>
             </select>
             <select value={form.assignedTo} onChange={e => setForm({ ...form, assignedTo: e.target.value })}
-              style={{ flex: 1, padding: '8px 12px', background: '#0d1117', border: '1px solid #3d444d', borderRadius: 6, color: '#e1e4e8' }}>
-              <option value="">Non assigne</option>
+              style={{ flex: 1, padding: '8px 12px', background: 'var(--bg-input)', border: '1px solid var(--border-input)', borderRadius: 6, color: 'var(--text-primary)' }}>
+              <option value="">{t('notAssigned')}</option>
               {members.map(m => <option key={m.id} value={m.userName}>{m.userName}</option>)}
             </select>
           </div>
           <div className="form-actions">
-            <button className="btn primary" onClick={handleCreate}>Creer</button>
-            <button className="btn" onClick={() => setShowForm(false)}>Annuler</button>
+            <button className="btn primary" onClick={handleCreate}>{t('create')}</button>
+            <button className="btn" onClick={() => setShowForm(false)}>{t('cancel')}</button>
           </div>
         </div>
       )}
 
       <div className="filter-bar">
-        <input placeholder="Rechercher..." value={filterSearch} onChange={e => setFilterSearch(e.target.value)} className="filter-input" />
+        <input placeholder={t('search')} value={filterSearch} onChange={e => setFilterSearch(e.target.value)} className="filter-input" />
         <select value={filterPriority} onChange={e => setFilterPriority(e.target.value)} className="filter-select">
-          <option value="">Toutes priorites</option>
-          <option value="high">Haute</option>
-          <option value="medium">Moyenne</option>
-          <option value="low">Basse</option>
+          <option value="">{t('allPriorities')}</option>
+          <option value="high">{t('high')}</option>
+          <option value="medium">{t('medium')}</option>
+          <option value="low">{t('low')}</option>
         </select>
         <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="filter-select">
-          <option value="">Tous statuts</option>
-          {STATUSES.map(s => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
+          <option value="">{t('allStatuses')}</option>
+          {STATUSES.map(s => <option key={s} value={s}>{t(`status.${s}`)}</option>)}
         </select>
         <select value={filterAssigned} onChange={e => setFilterAssigned(e.target.value)} className="filter-select">
-          <option value="">Tous</option>
-          <option value="_none">Non assigne</option>
+          <option value="">{t('all')}</option>
+          <option value="_none">{t('notAssigned')}</option>
           {assigneeNames.map(name => <option key={name} value={name}>{name}</option>)}
         </select>
         {(filterSearch || filterPriority || filterAssigned || filterStatus) && (
-          <button className="btn small" onClick={() => { setFilterSearch(''); setFilterPriority(''); setFilterAssigned(''); setFilterStatus(''); }}>Reinitialiser</button>
+          <button className="btn small" onClick={() => { setFilterSearch(''); setFilterPriority(''); setFilterAssigned(''); setFilterStatus(''); }}>{t('reset')}</button>
         )}
-        <span style={{ color: '#484f58', fontSize: 12, marginLeft: 'auto' }}>{filtered.length}/{tasks.length} taches</span>
+        <span style={{ color: 'var(--text-muted)', fontSize: 12, marginLeft: 'auto' }}>{filtered.length}/{tasks.length} {t('tasks')}</span>
       </div>
 
       <div className="task-table">
         <div className="task-table-header">
           <div className="task-col-info sort-header" onClick={() => toggleSort('id')}>
-            Tache{sortArrow('id')}
+            {t('task')}{sortArrow('id')}
           </div>
           {STATUSES.map(s => (
             <div key={s} className="task-col-status sort-header" style={{ color: STATUS_COLORS[s] }} onClick={() => toggleSort('status')}>
-              {STATUS_LABELS[s]}
+              {t(`status.${s}`)}
             </div>
           ))}
           <div className="task-col-hours sort-header" onClick={() => toggleSort('hours')}>
-            Heures{sortArrow('hours')}
+            {t('hours')}{sortArrow('hours')}
           </div>
           <div className="task-col-actions"></div>
         </div>
@@ -259,11 +251,11 @@ export function ProjectView({ project, onBack }: Props) {
               {STATUSES.map(s => (
                 <div key={s} className="task-col-status">
                   {task.status === s ? (
-                    <span className="status-dot active" style={{ background: STATUS_COLORS[s] }} title={STATUS_LABELS[s]} />
+                    <span className="status-dot active" style={{ background: STATUS_COLORS[s] }} title={t(`status.${s}`)} />
                   ) : (
                     <button
                       className="status-dot clickable"
-                      title={`Deplacer vers ${STATUS_LABELS[s]}`}
+                      title={`${t('moveToStatus')} ${t(`status.${s}`)}`}
                       onClick={() => handleStatusChange(task, s)}
                     />
                   )}
@@ -280,7 +272,7 @@ export function ProjectView({ project, onBack }: Props) {
             </div>
           );
         })}
-        {filtered.length === 0 && <div style={{ padding: 20, textAlign: 'center', color: '#484f58' }}>Aucune tache</div>}
+        {filtered.length === 0 && <div style={{ padding: 20, textAlign: 'center', color: 'var(--text-muted)' }}>{t('noTasks')}</div>}
         {totalAllMinutes > 0 && (
           <div className="task-table-footer">
             <div className="task-col-info" />

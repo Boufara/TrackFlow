@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { TaskItem, TimeEntry, GitCommit, ProjectMember } from './api';
 import {
   updateTask, getTimeEntries, createTimeEntry, deleteTimeEntry,
@@ -6,14 +7,6 @@ import {
 } from './api';
 
 const STATUSES = ['a_discuter', 'todo', 'in_progress', 'to_review', 'validated', 'rejected'];
-const STATUS_LABELS: Record<string, string> = {
-  todo: 'A faire',
-  in_progress: 'En cours',
-  to_review: 'A tester',
-  validated: 'Valide',
-  rejected: 'Rejete',
-  a_discuter: 'A discuter',
-};
 
 interface Props {
   task: TaskItem;
@@ -23,6 +16,7 @@ interface Props {
 }
 
 export function TaskModal({ task, projectId, members, onClose }: Props) {
+  const { t } = useTranslation();
   const [form, setForm] = useState(task);
   const [entries, setEntries] = useState<TimeEntry[]>([]);
   const currentUser = getCurrentUser();
@@ -77,31 +71,30 @@ export function TaskModal({ task, projectId, members, onClose }: Props) {
     return h > 0 ? `${h}h ${m}m` : `${m}m`;
   };
 
+  const inputStyle = { width: '100%', padding: '8px 12px', background: 'var(--bg-input)', border: '1px solid var(--border-input)', borderRadius: 6, color: 'var(--text-primary)', fontSize: 14 };
+  const smallInputStyle = { padding: '4px 8px', background: 'var(--bg-input)', border: '1px solid var(--border-input)', borderRadius: 4, color: 'var(--text-primary)', fontSize: 12 };
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={e => e.stopPropagation()}>
-        <h3>Tache #{task.id}</h3>
+        <h3>{t('task')} #{task.id}</h3>
 
         <div className="field">
-          <label>Titre</label>
-          <input
-            style={{ width: '100%', padding: '8px 12px', background: '#0d1117', border: '1px solid #3d444d', borderRadius: 6, color: '#e1e4e8', fontSize: 14 }}
-            value={form.title}
-            onChange={e => setForm({ ...form, title: e.target.value })}
-          />
+          <label>{t('title')}</label>
+          <input style={inputStyle} value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
         </div>
 
         <div className="field">
-          <label>Description</label>
+          <label>{t('description')}</label>
           <textarea
-            style={{ width: '100%', padding: '8px 12px', background: '#0d1117', border: '1px solid #3d444d', borderRadius: 6, color: '#e1e4e8', fontSize: 14, minHeight: 60, resize: 'vertical' }}
+            style={{ ...inputStyle, minHeight: 60, resize: 'vertical' as const }}
             value={form.description || ''}
             onChange={e => setForm({ ...form, description: e.target.value })}
           />
         </div>
 
         <div className="field">
-          <label>Statut</label>
+          <label>{t('status')}</label>
           <div className="status-select">
             {STATUSES.map(s => (
               <button
@@ -112,7 +105,7 @@ export function TaskModal({ task, projectId, members, onClose }: Props) {
                   if (s === 'validated' || s === 'to_review') setShowGit(true);
                 }}
               >
-                {STATUS_LABELS[s]}
+                {t(`status.${s}`)}
               </button>
             ))}
           </div>
@@ -120,41 +113,32 @@ export function TaskModal({ task, projectId, members, onClose }: Props) {
 
         <div style={{ display: 'flex', gap: 12 }}>
           <div className="field" style={{ flex: 1 }}>
-            <label>Priorite</label>
-            <select
-              style={{ width: '100%', padding: '8px 12px', background: '#0d1117', border: '1px solid #3d444d', borderRadius: 6, color: '#e1e4e8' }}
-              value={form.priority}
-              onChange={e => setForm({ ...form, priority: e.target.value })}
-            >
-              <option value="low">Basse</option>
-              <option value="medium">Moyenne</option>
-              <option value="high">Haute</option>
+            <label>{t('priority')}</label>
+            <select style={inputStyle} value={form.priority} onChange={e => setForm({ ...form, priority: e.target.value })}>
+              <option value="low">{t('low')}</option>
+              <option value="medium">{t('medium')}</option>
+              <option value="high">{t('high')}</option>
             </select>
           </div>
           <div className="field" style={{ flex: 1 }}>
-            <label>Assigne a</label>
-            <select
-              style={{ width: '100%', padding: '8px 12px', background: '#0d1117', border: '1px solid #3d444d', borderRadius: 6, color: '#e1e4e8' }}
-              value={form.assignedTo || ''}
-              onChange={e => setForm({ ...form, assignedTo: e.target.value })}
-            >
-              <option value="">Non assigne</option>
+            <label>{t('assignedTo')}</label>
+            <select style={inputStyle} value={form.assignedTo || ''} onChange={e => setForm({ ...form, assignedTo: e.target.value })}>
+              <option value="">{t('notAssigned')}</option>
               {members.map(m => <option key={m.id} value={m.userName}>{m.userName}</option>)}
             </select>
           </div>
         </div>
 
-        {/* Git section */}
         {showGit && (
           <div className="git-section">
-            <h4>Lier un commit</h4>
+            <h4>{t('linkCommit')}</h4>
             <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
               <select
-                style={{ flex: 1, padding: '6px 10px', background: '#0d1117', border: '1px solid #3d444d', borderRadius: 6, color: '#e1e4e8' }}
+                style={{ flex: 1, ...smallInputStyle, padding: '6px 10px', borderRadius: 6 }}
                 value={selectedBranch}
                 onChange={e => { setSelectedBranch(e.target.value); setForm({ ...form, branchName: e.target.value }); }}
               >
-                <option value="">-- Branche --</option>
+                <option value="">{t('branch')}</option>
                 {branches.map(b => <option key={b} value={b}>{b}</option>)}
               </select>
             </div>
@@ -174,17 +158,16 @@ export function TaskModal({ task, projectId, members, onClose }: Props) {
               </div>
             )}
             {form.commitHash && (
-              <div style={{ marginTop: 6, fontSize: 12, color: '#3fb950' }}>
-                Commit selectionne: {form.commitHash.substring(0, 7)} sur {form.branchName}
+              <div style={{ marginTop: 6, fontSize: 12, color: 'var(--green)' }}>
+                {t('selectedCommit')}: {form.commitHash.substring(0, 7)} {t('on')} {form.branchName}
               </div>
             )}
           </div>
         )}
 
-        {/* Time entries */}
         <div className="time-entries">
-          <h4 style={{ color: '#58a6ff', marginBottom: 8 }}>
-            Temps passe <span style={{ color: '#8b949e', fontWeight: 400 }}>— Total: {formatDuration(totalMinutes)}</span>
+          <h4 style={{ color: 'var(--accent)', marginBottom: 8 }}>
+            {t('timeSpent')} <span style={{ color: 'var(--text-secondary)', fontWeight: 400 }}>— {t('total')}: {formatDuration(totalMinutes)}</span>
           </h4>
 
           {entries.map(e => {
@@ -192,11 +175,11 @@ export function TaskModal({ task, projectId, members, onClose }: Props) {
             return (
               <div key={e.id} className="time-entry">
                 <span className="duration">{formatDuration(diff)}</span>
-                <span style={{ color: '#8b949e' }}>{e.user || '—'}</span>
-                <span style={{ color: '#484f58', fontSize: 12 }}>
+                <span style={{ color: 'var(--text-secondary)' }}>{e.user || '—'}</span>
+                <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>
                   {new Date(e.startTime).toLocaleString('fr-CA')} → {new Date(e.endTime).toLocaleString('fr-CA')}
                 </span>
-                {e.note && <span style={{ color: '#8b949e', fontSize: 12 }}> | {e.note}</span>}
+                {e.note && <span style={{ color: 'var(--text-secondary)', fontSize: 12 }}> | {e.note}</span>}
                 <button className="btn danger small" style={{ marginLeft: 'auto' }} onClick={() => handleDeleteEntry(e.id)}>×</button>
               </div>
             );
@@ -204,10 +187,10 @@ export function TaskModal({ task, projectId, members, onClose }: Props) {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
             <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-              <span style={{ color: '#8b949e', fontSize: 12 }}>De</span>
+              <span style={{ color: 'var(--text-secondary)', fontSize: 12 }}>{t('from')}</span>
               <input
                 type="datetime-local"
-                style={{ padding: '4px 8px', background: '#0d1117', border: '1px solid #3d444d', borderRadius: 4, color: '#e1e4e8', fontSize: 12 }}
+                style={smallInputStyle}
                 value={newEntry.startTime}
                 onChange={e => {
                   const start = e.target.value;
@@ -220,10 +203,10 @@ export function TaskModal({ task, projectId, members, onClose }: Props) {
                   setNewEntry({ ...newEntry, startTime: start, endTime: `${date}T${eh}:${em}` });
                 }}
               />
-              <span style={{ color: '#8b949e', fontSize: 12 }}>A</span>
+              <span style={{ color: 'var(--text-secondary)', fontSize: 12 }}>{t('to')}</span>
               <input
                 type="datetime-local"
-                style={{ padding: '4px 8px', background: '#0d1117', border: '1px solid #3d444d', borderRadius: 4, color: '#e1e4e8', fontSize: 12 }}
+                style={smallInputStyle}
                 value={newEntry.endTime}
                 min={newEntry.startTime}
                 onChange={e => {
@@ -234,8 +217,8 @@ export function TaskModal({ task, projectId, members, onClose }: Props) {
               <button className="btn primary small" onClick={handleAddEntry}>+</button>
             </div>
             <textarea
-              placeholder="Description (optionnel)"
-              style={{ padding: '6px 8px', background: '#0d1117', border: '1px solid #3d444d', borderRadius: 4, color: '#e1e4e8', fontSize: 12, width: '100%', minHeight: 32, resize: 'vertical' }}
+              placeholder={t('descriptionOptional')}
+              style={{ ...smallInputStyle, padding: '6px 8px', width: '100%', minHeight: 32, resize: 'vertical' as const }}
               value={newEntry.note}
               onChange={e => setNewEntry({ ...newEntry, note: e.target.value })}
             />
@@ -243,8 +226,8 @@ export function TaskModal({ task, projectId, members, onClose }: Props) {
         </div>
 
         <div style={{ display: 'flex', gap: 8, marginTop: 20, justifyContent: 'flex-end' }}>
-          <button className="btn" onClick={onClose}>Annuler</button>
-          <button className="btn primary" onClick={handleSave}>Sauvegarder</button>
+          <button className="btn" onClick={onClose}>{t('cancel')}</button>
+          <button className="btn primary" onClick={handleSave}>{t('save')}</button>
         </div>
       </div>
     </div>
