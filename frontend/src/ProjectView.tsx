@@ -30,9 +30,10 @@ function formatDuration(mins: number) {
 interface Props {
   project: Project;
   onBack: () => void;
+  onProjectUpdate?: (project: Project) => void;
 }
 
-export function ProjectView({ project, onBack }: Props) {
+export function ProjectView({ project, onBack, onProjectUpdate }: Props) {
   const { t } = useTranslation();
   const [tasks, setTasks] = useState<TaskItem[]>([]);
   const [members, setMembers] = useState<ProjectMember[]>([]);
@@ -111,9 +112,10 @@ export function ProjectView({ project, onBack }: Props) {
   };
 
   const handleProjectStatus = async (status: string) => {
-    await updateProject(project.id, { ...project, status });
+    const updated = await updateProject(project.id, { ...project, status });
     setProjectStatus(status);
     setShowStatusPopup(false);
+    onProjectUpdate?.(updated);
   };
 
   const PROJECT_STATUSES = ['active', 'on_hold', 'completed', 'archived'];

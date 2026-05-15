@@ -95,7 +95,7 @@ function App() {
       {page === 'users' && isAdmin ? (
         <UsersPage onBack={() => setPage('projects')} />
       ) : selected ? (
-        <ProjectView project={selected} onBack={() => setSelected(null)} />
+        <ProjectView project={selected} onBack={() => setSelected(null)} onProjectUpdate={(p) => { setSelected(p); setProjects(prev => prev.map(pr => pr.id === p.id ? p : pr)); }} />
       ) : (
         <div className="app">
           {isAdmin && (
@@ -123,30 +123,11 @@ function App() {
               const totalM = s ? Math.round(s.totalMinutes % 60) : 0;
               return (
                 <div key={p.id} className="project-card" onClick={() => setSelected(p)}>
-                  <div className="project-card-top">
+                  <div className="project-card-row">
                     <div className="project-info">
                       <h3>{p.name}</h3>
                       {p.description && <p>{p.description}</p>}
-                      <small>{p.repoPath}</small>
                     </div>
-                  </div>
-                  <div className="project-right">
-                    {s && s.total > 0 && (
-                      <div className="project-stats-wrapper">
-                        <div className="project-stats-row">
-                          <div className="stat-card total-card">{s.total}<span>{t('tasks')}</span></div>
-                          <div className="stat-card validated">{s.statusCounts['validated'] || 0}<span>{t('status.validated')}</span></div>
-                          {s.totalMinutes > 0 && <div className="stat-card hours">{totalH > 0 ? `${totalH}h${totalM > 0 ? `${totalM}` : ''}` : `${totalM}m`}<span>{t('hours')}</span></div>}
-                        </div>
-                        <div className="project-stats-row">
-                          {(['in_progress', 'to_review', 'a_discuter', 'todo', 'rejected'] as const).map(status => {
-                            const count = s.statusCounts[status] || 0;
-                            const cls: Record<string, string> = { in_progress: 'progress', to_review: 'review', rejected: 'rejected', a_discuter: 'discuss', todo: 'todo' };
-                            return <div key={status} className={`stat-card ${cls[status] || ''}`}>{count}<span>{t(`status.${status}`)}</span></div>;
-                          })}
-                        </div>
-                      </div>
-                    )}
                     <div className="project-actions">
                       <span className={`project-status-badge ps-${p.status || 'active'}`}>{t(`projectStatus.${p.status || 'active'}`)}</span>
                       {isAdmin && (
@@ -155,6 +136,20 @@ function App() {
                         </button>
                       )}
                     </div>
+                  </div>
+                  <div className="project-card-row">
+                    <small>{p.repoPath}</small>
+                    {s && s.total > 0 && (
+                      <div className="project-stats-inline">
+                        <div className="stat-chip total-card">{s.total} {t('tasks')}</div>
+                        {(['validated', 'in_progress', 'to_review', 'a_discuter', 'todo', 'rejected'] as const).map(status => {
+                          const count = s.statusCounts[status] || 0;
+                          const cls: Record<string, string> = { validated: 'validated', in_progress: 'progress', to_review: 'review', rejected: 'rejected', a_discuter: 'discuss', todo: 'todo' };
+                          return <div key={status} className={`stat-chip ${cls[status]}`}>{count} {t(`status.${status}`)}</div>;
+                        })}
+                        {s.totalMinutes > 0 && <div className="stat-chip hours">⏱ {totalH > 0 ? `${totalH}h${totalM > 0 ? `${totalM}m` : ''}` : `${totalM}m`}</div>}
+                      </div>
+                    )}
                   </div>
                 </div>
               );
