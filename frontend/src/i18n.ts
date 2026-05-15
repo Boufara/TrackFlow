@@ -81,6 +81,9 @@ const fr = {
   to: 'À',
   save: 'Sauvegarder',
   currentBranch: 'Branche actuelle',
+  myRepoPath: 'Mon dossier git :',
+  select: 'Choisir',
+  noFolders: 'Aucun sous-dossier',
 };
 
 const en: typeof fr = {
@@ -163,6 +166,9 @@ const en: typeof fr = {
   to: 'To',
   save: 'Save',
   currentBranch: 'Current branch',
+  myRepoPath: 'My git folder:',
+  select: 'Select',
+  noFolders: 'No subfolders',
 };
 
 i18n.use(initReactI18next).init({

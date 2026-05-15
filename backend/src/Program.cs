@@ -285,6 +285,8 @@ app.MapDelete("/api/time-entries/{id}", async (int id, TrackFlowDb db) =>
 
 // === GIT ===
 
+// === GIT ===
+
 app.MapGet("/api/projects/{projectId}/git/branches", async (int projectId, TrackFlowDb db) =>
 {
     var project = await db.Projects.FindAsync(projectId);

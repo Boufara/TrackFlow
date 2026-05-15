@@ -50,9 +50,9 @@ export function ProjectView({ project, onBack }: Props) {
   const [sortKey, setSortKey] = useState<SortKey>('priority');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
 
+
   const currentUser = getCurrentUser();
   const isAdmin = currentUser?.isAdmin ?? false;
-
   const load = () => { getTasks(project.id).then(setTasks); getTimeStats(project.id).then(setTimeStats); };
   const loadMembers = () => getMembers(project.id).then(setMembers);
 
@@ -148,6 +148,8 @@ export function ProjectView({ project, onBack }: Props) {
           <button className="btn primary small" onClick={() => setShowForm(!showForm)}>{t('newTask')}</button>
         </div>
       </div>
+
+
 
       {showMembers && isAdmin && (
         <div className="form-card">

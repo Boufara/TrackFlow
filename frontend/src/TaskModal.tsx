@@ -25,6 +25,7 @@ export function TaskModal({ task, projectId, members, onClose }: Props) {
   const [currentBranch, setCurrentBranch] = useState('');
   const [commits, setCommits] = useState<GitCommit[]>([]);
   const [selectedBranch, setSelectedBranch] = useState(task.branchName || '');
+  const [showCommits, setShowCommits] = useState(!task.commitHash);
   const [showGit] = useState(true);
 
   useEffect(() => {
@@ -50,6 +51,7 @@ export function TaskModal({ task, projectId, members, onClose }: Props) {
 
   const handleAddEntry = async () => {
     if (!newEntry.startTime || !newEntry.endTime) return;
+    if (newEntry.endTime <= newEntry.startTime) return;
     await createTimeEntry(task.id, { ...newEntry, user: currentUser?.displayName || '' });
     const nextStart = newEntry.endTime;
     const [date, time] = nextStart.split('T');
@@ -141,7 +143,7 @@ export function TaskModal({ task, projectId, members, onClose }: Props) {
               <select
                 style={{ flex: 1, ...smallInputStyle, padding: '6px 10px', borderRadius: 6 }}
                 value={selectedBranch}
-                onChange={e => { setSelectedBranch(e.target.value); setForm({ ...form, branchName: e.target.value, commitHash: e.target.value ? form.commitHash : '' }); }}
+                onChange={e => { setSelectedBranch(e.target.value); setShowCommits(true); setForm({ ...form, branchName: e.target.value, commitHash: e.target.value ? form.commitHash : '' }); }}
               >
                 <option value="">{t('branch')}</option>
                 {[...branches].sort((a, b) => {
@@ -154,13 +156,13 @@ export function TaskModal({ task, projectId, members, onClose }: Props) {
                 <span style={{ fontSize: 11, color: 'var(--green)', background: 'var(--green-bg)', padding: '2px 8px', borderRadius: 10, whiteSpace: 'nowrap' }}>✓ {t('currentBranch')}</span>
               )}
             </div>
-            {selectedBranch && (
+            {selectedBranch && showCommits && (
               <div className="commit-list">
                 {commits.map(c => (
                   <div
                     key={c.hash}
                     className={`commit-item ${form.commitHash === c.hash ? 'selected' : ''}`}
-                    onClick={() => setForm({ ...form, commitHash: c.hash })}
+                    onClick={() => { setForm({ ...form, commitHash: c.hash }); setShowCommits(false); }}
                   >
                     <span className="hash">{c.hash.substring(0, 7)}</span>
                     <span className="msg">{c.message}</span>
@@ -170,8 +172,9 @@ export function TaskModal({ task, projectId, members, onClose }: Props) {
               </div>
             )}
             {form.commitHash && (
-              <div style={{ marginTop: 6, fontSize: 12, color: 'var(--green)' }}>
-                {t('selectedCommit')}: {form.commitHash.substring(0, 7)} {t('on')} {form.branchName}
+              <div style={{ marginTop: 6, fontSize: 12, color: 'var(--green)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span>{t('selectedCommit')}: <span style={{ fontFamily: 'monospace' }}>{form.commitHash.substring(0, 7)}</span> {t('on')} {form.branchName}</span>
+                <button className="btn small" onClick={() => { setForm({ ...form, commitHash: '' }); setShowCommits(true); }} style={{ fontSize: 10, padding: '1px 6px' }}>✕</button>
               </div>
             )}
           </div>
@@ -207,12 +210,16 @@ export function TaskModal({ task, projectId, members, onClose }: Props) {
                 onChange={e => {
                   const start = e.target.value;
                   if (!start) { setNewEntry({ ...newEntry, startTime: '' }); return; }
-                  const [date, time] = start.split('T');
-                  const [h, m] = time.split(':').map(Number);
-                  const totalMin = h * 60 + m + 15;
-                  const eh = String(Math.floor(totalMin / 60) % 24).padStart(2, '0');
-                  const em = String(totalMin % 60).padStart(2, '0');
-                  setNewEntry({ ...newEntry, startTime: start, endTime: `${date}T${eh}:${em}` });
+                  if (newEntry.endTime) {
+                    setNewEntry({ ...newEntry, startTime: start });
+                  } else {
+                    const [date, time] = start.split('T');
+                    const [h, m] = time.split(':').map(Number);
+                    const totalMin = h * 60 + m + 15;
+                    const eh = String(Math.floor(totalMin / 60) % 24).padStart(2, '0');
+                    const em = String(totalMin % 60).padStart(2, '0');
+                    setNewEntry({ ...newEntry, startTime: start, endTime: `${date}T${eh}:${em}` });
+                  }
                 }}
               />
               <span style={{ color: 'var(--text-secondary)', fontSize: 12 }}>{t('to')}</span>

@@ -1,24 +1,27 @@
 # TrackFlow — Guide de déploiement
 
-## Prérequis serveur cible
+## Machine cible
+
+**172.16.120.11** (public: 204.225.113.11) — PostgreSQL déjà installé.
+
+## Prérequis
 
 - .NET 10 Runtime
-- PostgreSQL
-- Port 5201 ouvert dans le firewall
+- Port 5201 ouvert dans le firewall (TCP, entrant)
 
-## Étape 1 — Build (sur la machine de dev)
+## Premier déploiement
+
+### Étape 1 — Build (sur la machine de dev)
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File deploy.ps1
 ```
 
-Produit un dossier `deploy/` contenant le backend + le frontend.
+Produit un dossier `deploy/`.
 
-## Étape 2 — Copier sur le serveur
+### Étape 2 — Créer la base de données
 
-Copier le dossier `deploy/` sur le serveur cible (partage réseau, clé USB, SCP, etc.).
-
-## Étape 3 — Créer la base de données
+Sur 172.16.120.11 :
 
 ```sql
 CREATE DATABASE trackflow;
@@ -26,14 +29,18 @@ CREATE DATABASE trackflow;
 
 Les tables et le user admin sont créés automatiquement au premier lancement.
 
-## Étape 4 — Configurer
+### Étape 3 — Copier sur le serveur
 
-Modifier `deploy/appsettings.json` :
+Copier le contenu de `deploy/` vers `C:\TrackFlow\` sur 172.16.120.11.
+
+### Étape 4 — Configurer
+
+Modifier `C:\TrackFlow\appsettings.json` :
 
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Host=localhost;Database=trackflow;Username=postgres;Password=MOT_DE_PASSE"
+    "DefaultConnection": "Host=localhost;Database=trackflow;Username=postgres;Password=Aout4455"
   },
   "Jwt": {
     "Key": "UneCleSuperSecrete-Production-2026!"
@@ -41,24 +48,42 @@ Modifier `deploy/appsettings.json` :
 }
 ```
 
-## Étape 5 — Lancer
+### Étape 5 — Ouvrir le port 5201
 
-```bash
-cd deploy
-dotnet TrackFlow.dll --urls "http://0.0.0.0:5201"
+```powershell
+netsh advfirewall firewall add rule name="TrackFlow" dir=in action=allow protocol=TCP localport=5201
 ```
 
-## Étape 6 — Accéder
+### Étape 6 — Créer la tâche planifiée (démarrage auto)
 
-Ouvrir `http://IP_SERVEUR:5201` dans le navigateur.
+```powershell
+schtasks /create /tn "TrackFlow" /tr "cmd /c \"C:\Program Files\dotnet\dotnet.exe\" C:\TrackFlow\TrackFlow.dll --urls http://0.0.0.0:5201" /sc onstart /ru SYSTEM /rl HIGHEST
+schtasks /run /tn "TrackFlow"
+```
+
+### Étape 7 — Accéder
+
+`http://172.16.120.11:5201`
 
 Connexion par défaut : `admin` / `admin`
 
-## Optionnel — Service Windows
-
-Pour lancer TrackFlow au démarrage du serveur :
+## Mise à jour (redéploiement)
 
 ```powershell
-sc.exe create TrackFlow binPath="dotnet C:\chemin\deploy\TrackFlow.dll --urls http://0.0.0.0:5201" start=auto
-sc.exe start TrackFlow
+# 1. Build sur la machine de dev
+powershell -ExecutionPolicy Bypass -File deploy.ps1
+
+# 2. Arrêter TrackFlow sur le serveur
+schtasks /end /tn "TrackFlow"
+
+# 3. Copier deploy/ → C:\TrackFlow\ (écraser les fichiers)
+#    IMPORTANT: ne pas écraser appsettings.json si déjà configuré
+
+# 4. Relancer
+schtasks /run /tn "TrackFlow"
 ```
+
+## Notes
+
+- Chaque utilisateur peut configurer son propre chemin de repo git dans le projet (champ "Mon dossier git")
+- Les migrations DB s'appliquent automatiquement au démarrage
