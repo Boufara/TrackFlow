@@ -293,7 +293,7 @@ app.MapGet("/api/projects/{projectId}/git/branches", async (int projectId, Track
     if (project is null) return Results.NotFound();
     if (!Directory.Exists(project.RepoPath)) return Results.BadRequest("Repo path does not exist");
 
-    var psi = new ProcessStartInfo("git", "branch --format=%(refname:short)")
+    var psi = new ProcessStartInfo(@"C:\Program Files\Git\cmd\git.exe", "branch --format=%(refname:short)")
     {
         WorkingDirectory = project.RepoPath,
         RedirectStandardOutput = true,
@@ -306,7 +306,7 @@ app.MapGet("/api/projects/{projectId}/git/branches", async (int projectId, Track
     var branches = output.Split('\n', StringSplitOptions.RemoveEmptyEntries).Select(b => b.Trim()).ToList();
 
     // Get current branch
-    var psiHead = new ProcessStartInfo("git", "rev-parse --abbrev-ref HEAD")
+    var psiHead = new ProcessStartInfo(@"C:\Program Files\Git\cmd\git.exe", "rev-parse --abbrev-ref HEAD")
     {
         WorkingDirectory = project.RepoPath,
         RedirectStandardOutput = true,
@@ -333,7 +333,7 @@ app.MapGet("/api/projects/{projectId}/git/commits", async (int projectId, string
         ? "log --all --oneline -50 --format=%H||%s||%an||%ai"
         : $"log {branch} --oneline -50 --format=%H||%s||%an||%ai";
 
-    var psi = new ProcessStartInfo("git", args)
+    var psi = new ProcessStartInfo(@"C:\Program Files\Git\cmd\git.exe", args)
     {
         WorkingDirectory = project.RepoPath,
         RedirectStandardOutput = true,
