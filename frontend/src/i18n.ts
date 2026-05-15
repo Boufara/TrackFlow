@@ -15,6 +15,9 @@ const fr = {
   delete: 'Supprimer',
   noProjects: 'Aucun projet. Créez-en un pour commencer.',
   confirmDeleteProject: 'Supprimer ce projet ?',
+  typeProjectName: 'Écrivez le nom du projet pour confirmer :',
+  projectNameMismatch: 'Le nom du projet ne correspond pas.',
+  wrongPassword: 'Mot de passe incorrect.',
   changeTheme: 'Changer le thème',
 
   // Login
@@ -100,6 +103,9 @@ const en: typeof fr = {
   delete: 'Delete',
   noProjects: 'No projects. Create one to get started.',
   confirmDeleteProject: 'Delete this project?',
+  typeProjectName: 'Type the project name to confirm:',
+  projectNameMismatch: 'Project name does not match.',
+  wrongPassword: 'Wrong password.',
   changeTheme: 'Change theme',
 
   // Login

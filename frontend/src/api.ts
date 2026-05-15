@@ -130,6 +130,10 @@ export const deleteTimeEntry = (id: number) => request<void>(`${API}/time-entrie
 export interface TimeStats { users: string[]; totalMinutes: number; }
 export const getTimeStats = (projectId: number) => request<Record<number, TimeStats>>(`${API}/projects/${projectId}/time-stats`);
 
+// Project stats
+export interface ProjectStats { total: number; statusCounts: Record<string, number>; totalMinutes: number; }
+export const getProjectsStats = () => request<Record<number, ProjectStats>>(`${API}/projects/stats`);
+
 // Git
 export const getBranches = (projectId: number) => request<{ branches: string[]; currentBranch: string }>(`${API}/projects/${projectId}/git/branches`);
 export const getCommits = (projectId: number, branch?: string) => request<GitCommit[]>(`${API}/projects/${projectId}/git/commits${branch ? `?branch=${encodeURIComponent(branch)}` : ''}`);

@@ -158,19 +158,70 @@ header h1 { font-size: 24px; color: var(--accent); }
 
 .project-card {
   display: flex;
-  justify-content: space-between;
   align-items: center;
   background: var(--bg-secondary);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 16px;
+  border-radius: 10px;
+  padding: 16px 20px;
   cursor: pointer;
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  gap: 16px;
 }
-.project-card:hover { border-color: var(--accent); }
+.project-card:hover { border-color: var(--accent); box-shadow: 0 2px 12px rgba(0,0,0,0.15); }
+.project-card-top {
+  flex: 1;
+  min-width: 0;
+}
 .project-info h3 { color: var(--accent); margin-bottom: 4px; }
 .project-info p { color: var(--text-secondary); font-size: 14px; }
-.project-info small { color: var(--text-muted); font-size: 12px; }
+.project-info small { color: var(--text-muted); font-size: 12px; font-family: monospace; }
+.project-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.project-stats {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+.stat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-radius: 8px;
+  padding: 6px 0;
+  font-size: 16px;
+  font-weight: 700;
+  width: 72px;
+}
+.stat-card span {
+  font-size: 9px;
+  font-weight: 500;
+  text-transform: uppercase;
+  margin-top: 2px;
+  opacity: 0.85;
+}
+.stat-card             { background: var(--bg-tertiary); color: var(--text-primary); }
+.stat-card span        { color: var(--text-muted); }
+.stat-card.validated   { background: var(--green-bg); color: var(--green); }
+.stat-card.validated span { color: var(--green); }
+.stat-card.progress    { background: var(--accent-bg); color: var(--accent); }
+.stat-card.progress span { color: var(--accent); }
+.stat-card.review      { background: var(--yellow-bg); color: var(--yellow); }
+.stat-card.review span { color: var(--yellow); }
+.stat-card.rejected    { background: var(--red-bg); color: var(--red); }
+.stat-card.rejected span { color: var(--red); }
+.stat-card.discuss     { background: #2d1f54; color: var(--purple); }
+.stat-card.discuss span { color: var(--purple); }
+.stat-card.todo        { background: var(--bg-tertiary); color: var(--text-secondary); }
+.stat-card.todo span   { color: var(--text-muted); }
+.stat-card.hours       { background: #2d1f54; color: var(--purple); }
+.stat-card.hours span  { color: var(--purple); }
+
+[data-theme="light"] .stat-card.discuss { background: #f3e8ff; }
+[data-theme="light"] .stat-card.hours { background: #f3e8ff; }
 
 .empty { color: var(--text-muted); text-align: center; padding: 40px; }
 

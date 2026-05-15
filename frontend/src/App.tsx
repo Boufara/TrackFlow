@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { Project } from './api';
-import { getProjects, createProject, deleteProject, isLoggedIn, getCurrentUser, logout } from './api';
+import type { Project, ProjectStats } from './api';
+import { getProjects, createProject, deleteProject, isLoggedIn, getCurrentUser, logout, getProjectsStats } from './api';
 import { ProjectView } from './ProjectView';
 import { LoginPage } from './LoginPage';
 import { UsersPage } from './UsersPage';
@@ -21,6 +21,10 @@ function App() {
     return (localStorage.getItem('trackflow_theme') as 'dark' | 'light') || 'dark';
   });
 
+  const [stats, setStats] = useState<Record<number, ProjectStats>>({});
+  const [deleteConfirm, setDeleteConfirm] = useState<{ project: Project; name: string; password: string } | null>(null);
+  const [deleteError, setDeleteError] = useState('');
+
   const user = getCurrentUser();
   const isAdmin = user?.isAdmin ?? false;
 
@@ -35,7 +39,7 @@ function App() {
     localStorage.setItem('trackflow_lang', next);
   };
 
-  const load = () => getProjects().then(setProjects);
+  const load = () => { getProjects().then(setProjects); getProjectsStats().then(setStats); };
   useEffect(() => { if (loggedIn) load(); }, [loggedIn]);
 
   const handleCreate = async () => {
@@ -46,10 +50,20 @@ function App() {
     load();
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm(t('confirmDeleteProject'))) return;
-    await deleteProject(id);
-    if (selected?.id === id) setSelected(null);
+  const handleDeleteConfirm = async () => {
+    if (!deleteConfirm) return;
+    if (deleteConfirm.name !== deleteConfirm.project.name) {
+      setDeleteError(t('projectNameMismatch'));
+      return;
+    }
+    if (deleteConfirm.password !== 'admin') {
+      setDeleteError(t('wrongPassword'));
+      return;
+    }
+    await deleteProject(deleteConfirm.project.id);
+    if (selected?.id === deleteConfirm.project.id) setSelected(null);
+    setDeleteConfirm(null);
+    setDeleteError('');
     load();
   };
 
@@ -103,17 +117,73 @@ function App() {
           )}
 
           <div className="project-list">
-            {projects.map(p => (
-              <div key={p.id} className="project-card" onClick={() => setSelected(p)}>
-                <div className="project-info">
-                  <h3>{p.name}</h3>
-                  {p.description && <p>{p.description}</p>}
-                  <small>{p.repoPath}</small>
+            {projects.map(p => {
+              const s = stats[p.id];
+              const totalH = s ? Math.floor(s.totalMinutes / 60) : 0;
+              const totalM = s ? Math.round(s.totalMinutes % 60) : 0;
+              return (
+                <div key={p.id} className="project-card" onClick={() => setSelected(p)}>
+                  <div className="project-card-top">
+                    <div className="project-info">
+                      <h3>{p.name}</h3>
+                      {p.description && <p>{p.description}</p>}
+                      <small>{p.repoPath}</small>
+                    </div>
+                  </div>
+                  <div className="project-right">
+                    {s && s.total > 0 && (
+                      <div className="project-stats">
+                        <div className="stat-card">{s.total}<span>{t('tasks')}</span></div>
+                        {(['a_discuter', 'todo', 'in_progress', 'to_review', 'validated', 'rejected'] as const).map(status => {
+                          const count = s.statusCounts[status] || 0;
+                          const cls: Record<string, string> = { validated: 'validated', in_progress: 'progress', to_review: 'review', rejected: 'rejected', a_discuter: 'discuss', todo: 'todo' };
+                          return <div key={status} className={`stat-card ${cls[status] || ''}`}>{count}<span>{t(`status.${status}`)}</span></div>;
+                        })}
+                        {s.totalMinutes > 0 && <div className="stat-card hours">{totalH > 0 ? `${totalH}h${totalM > 0 ? `${totalM}` : ''}` : `${totalM}m`}<span>{t('hours')}</span></div>}
+                      </div>
+                    )}
+                    {isAdmin && (
+                      <button className="btn danger small" onClick={e => { e.stopPropagation(); setDeleteConfirm({ project: p, name: '', password: '' }); setDeleteError(''); }} style={{ marginLeft: 8 }}>
+                        {t('delete')}
+                      </button>
+                    )}
+                  </div>
                 </div>
-                {isAdmin && <button className="btn danger small" onClick={e => { e.stopPropagation(); handleDelete(p.id); }}>{t('delete')}</button>}
-              </div>
-            ))}
+              );
+            })}
             {projects.length === 0 && <p className="empty">{t('noProjects')}</p>}
+          </div>
+        </div>
+      )}
+
+      {deleteConfirm && (
+        <div className="modal-overlay" onClick={() => setDeleteConfirm(null)}>
+          <div className="modal" style={{ width: 420 }} onClick={e => e.stopPropagation()}>
+            <h3 style={{ color: 'var(--red)' }}>{t('confirmDeleteProject')}</h3>
+            <p style={{ color: 'var(--text-secondary)', fontSize: 14, marginBottom: 16 }}>
+              {t('typeProjectName')} <strong style={{ color: 'var(--text-primary)' }}>{deleteConfirm.project.name}</strong>
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <input
+                placeholder={t('projectName')}
+                value={deleteConfirm.name}
+                onChange={e => setDeleteConfirm({ ...deleteConfirm, name: e.target.value })}
+                style={{ padding: '8px 12px', background: 'var(--bg-input)', border: '1px solid var(--border-input)', borderRadius: 6, color: 'var(--text-primary)', fontSize: 14 }}
+              />
+              <input
+                type="password"
+                placeholder={t('password')}
+                value={deleteConfirm.password}
+                onChange={e => setDeleteConfirm({ ...deleteConfirm, password: e.target.value })}
+                onKeyDown={e => { if (e.key === 'Enter') handleDeleteConfirm(); }}
+                style={{ padding: '8px 12px', background: 'var(--bg-input)', border: '1px solid var(--border-input)', borderRadius: 6, color: 'var(--text-primary)', fontSize: 14 }}
+              />
+              {deleteError && <span style={{ color: 'var(--red)', fontSize: 13 }}>{deleteError}</span>}
+              <div className="form-actions">
+                <button className="btn danger" onClick={handleDeleteConfirm}>{t('delete')}</button>
+                <button className="btn" onClick={() => setDeleteConfirm(null)}>{t('cancel')}</button>
+              </div>
+            </div>
           </div>
         </div>
       )}

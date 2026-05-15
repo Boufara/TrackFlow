@@ -117,6 +117,35 @@ app.MapDelete("/api/users/{id}", async (int id, TrackFlowDb db, ClaimsPrincipal 
 app.MapGet("/api/projects", async (TrackFlowDb db) =>
     await db.Projects.OrderBy(p => p.Name).ToListAsync()).RequireAuthorization();
 
+app.MapGet("/api/projects/stats", async (TrackFlowDb db) =>
+{
+    var tasks = await db.Tasks.ToListAsync();
+    var timeEntries = await db.TimeEntries.ToListAsync();
+
+    var tasksByProject = tasks.GroupBy(t => t.ProjectId);
+    var result = new Dictionary<int, object>();
+
+    foreach (var group in tasksByProject)
+    {
+        var taskIds = group.Select(t => t.Id).ToHashSet();
+        var totalMinutes = timeEntries
+            .Where(e => taskIds.Contains(e.TaskId))
+            .Sum(e => (e.EndTime - e.StartTime).TotalMinutes);
+
+        var statusCounts = group.GroupBy(t => t.Status)
+            .ToDictionary(g => g.Key, g => g.Count());
+
+        result[group.Key] = new
+        {
+            total = group.Count(),
+            statusCounts,
+            totalMinutes
+        };
+    }
+
+    return Results.Ok(result);
+}).RequireAuthorization();
+
 app.MapGet("/api/projects/{id}", async (int id, TrackFlowDb db) =>
     await db.Projects.FindAsync(id) is Project p ? Results.Ok(p) : Results.NotFound()).RequireAuthorization();
 
