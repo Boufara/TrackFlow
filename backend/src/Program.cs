@@ -36,6 +36,8 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 app.UseCors();
+app.UseDefaultFiles();
+app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -355,6 +357,8 @@ app.MapGet("/api/projects/{projectId}/git/commits", async (int projectId, string
 
     return Results.Ok(commits);
 }).RequireAuthorization();
+
+app.MapFallbackToFile("index.html");
 
 app.Run();
 
