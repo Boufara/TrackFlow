@@ -181,47 +181,94 @@ header h1 { font-size: 24px; color: var(--accent); }
   gap: 8px;
   flex-shrink: 0;
 }
-.project-stats {
+.project-stats-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: stretch;
+  width: 340px;
+}
+.project-stats-row {
   display: flex;
   gap: 6px;
-  justify-content: flex-end;
 }
 .stat-card {
   display: flex;
   flex-direction: column;
   align-items: center;
   border-radius: 8px;
-  padding: 6px 0;
-  font-size: 16px;
   font-weight: 700;
-  width: 72px;
+  border: 1px solid var(--border);
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  flex: 1;
 }
 .stat-card span {
   font-size: 9px;
   font-weight: 500;
   text-transform: uppercase;
   margin-top: 2px;
-  opacity: 0.85;
+  color: var(--text-muted);
 }
-.stat-card             { background: var(--bg-tertiary); color: var(--text-primary); }
-.stat-card span        { color: var(--text-muted); }
-.stat-card.validated   { background: var(--green-bg); color: var(--green); }
-.stat-card.validated span { color: var(--green); }
-.stat-card.progress    { background: var(--accent-bg); color: var(--accent); }
-.stat-card.progress span { color: var(--accent); }
-.stat-card.review      { background: var(--yellow-bg); color: var(--yellow); }
-.stat-card.review span { color: var(--yellow); }
-.stat-card.rejected    { background: var(--red-bg); color: var(--red); }
-.stat-card.rejected span { color: var(--red); }
-.stat-card.discuss     { background: #2d1f54; color: var(--purple); }
-.stat-card.discuss span { color: var(--purple); }
-.stat-card.todo        { background: var(--bg-tertiary); color: var(--text-secondary); }
-.stat-card.todo span   { color: var(--text-muted); }
-.stat-card.hours       { background: #2d1f54; color: var(--purple); }
-.stat-card.hours span  { color: var(--purple); }
 
-[data-theme="light"] .stat-card.discuss { background: #f3e8ff; }
-[data-theme="light"] .stat-card.hours { background: #f3e8ff; }
+/* Row 1: big cards */
+.project-stats-row:first-child .stat-card {
+  font-size: 18px;
+  padding: 8px 0;
+}
+
+/* Total — prominent */
+.stat-card.total-card {
+  background: var(--accent-bg);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.stat-card.total-card span { color: var(--accent); }
+
+/* Validated — highlighted */
+.stat-card.validated {
+  background: var(--green-bg);
+  color: var(--green);
+  border-color: var(--green);
+}
+.stat-card.validated span { color: var(--green); }
+
+/* Row 2: small cards */
+.project-stats-row:last-child .stat-card {
+  font-size: 13px;
+  padding: 4px 0;
+}
+.stat-card.progress    { color: var(--accent); }
+.stat-card.progress span { color: var(--accent); }
+.stat-card.review      { color: var(--yellow); }
+.stat-card.review span { color: var(--yellow); }
+.stat-card.rejected    { color: var(--red); }
+.stat-card.rejected span { color: var(--red); }
+.stat-card.discuss     { color: var(--purple); }
+.stat-card.discuss span { color: var(--purple); }
+.stat-card.todo span   { color: var(--text-muted); }
+
+/* Hours — pill style, width = 2 small cards + gap */
+.stat-card.hours {
+  flex-direction: row;
+  gap: 4px;
+  flex: none;
+  width: calc((100% - 24px) * 2 / 5 + 6px);
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  background: none;
+  border: 1px solid var(--purple);
+  color: var(--purple);
+  justify-content: center;
+}
+.stat-card.hours span {
+  font-size: 11px;
+  text-transform: none;
+  margin-top: 0;
+  color: var(--purple);
+  opacity: 0.7;
+}
 
 .empty { color: var(--text-muted); text-align: center; padding: 40px; }
 

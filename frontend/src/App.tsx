@@ -132,14 +132,19 @@ function App() {
                   </div>
                   <div className="project-right">
                     {s && s.total > 0 && (
-                      <div className="project-stats">
-                        <div className="stat-card">{s.total}<span>{t('tasks')}</span></div>
-                        {(['a_discuter', 'todo', 'in_progress', 'to_review', 'validated', 'rejected'] as const).map(status => {
-                          const count = s.statusCounts[status] || 0;
-                          const cls: Record<string, string> = { validated: 'validated', in_progress: 'progress', to_review: 'review', rejected: 'rejected', a_discuter: 'discuss', todo: 'todo' };
-                          return <div key={status} className={`stat-card ${cls[status] || ''}`}>{count}<span>{t(`status.${status}`)}</span></div>;
-                        })}
-                        {s.totalMinutes > 0 && <div className="stat-card hours">{totalH > 0 ? `${totalH}h${totalM > 0 ? `${totalM}` : ''}` : `${totalM}m`}<span>{t('hours')}</span></div>}
+                      <div className="project-stats-wrapper">
+                        <div className="project-stats-row">
+                          <div className="stat-card total-card">{s.total}<span>{t('tasks')}</span></div>
+                          <div className="stat-card validated">{s.statusCounts['validated'] || 0}<span>{t('status.validated')}</span></div>
+                          {s.totalMinutes > 0 && <div className="stat-card hours">{totalH > 0 ? `${totalH}h${totalM > 0 ? `${totalM}` : ''}` : `${totalM}m`}<span>{t('hours')}</span></div>}
+                        </div>
+                        <div className="project-stats-row">
+                          {(['in_progress', 'to_review', 'a_discuter', 'todo', 'rejected'] as const).map(status => {
+                            const count = s.statusCounts[status] || 0;
+                            const cls: Record<string, string> = { in_progress: 'progress', to_review: 'review', rejected: 'rejected', a_discuter: 'discuss', todo: 'todo' };
+                            return <div key={status} className={`stat-card ${cls[status] || ''}`}>{count}<span>{t(`status.${status}`)}</span></div>;
+                          })}
+                        </div>
                       </div>
                     )}
                     {isAdmin && (
