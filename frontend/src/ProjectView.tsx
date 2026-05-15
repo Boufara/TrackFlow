@@ -3,13 +3,22 @@ import type { Project, TaskItem, ProjectMember, AppUser } from './api';
 import { getTasks, createTask, deleteTask, updateTask, getMembers, addMember, removeMember, getUsers, getCurrentUser } from './api';
 import { TaskModal } from './TaskModal';
 
-const STATUSES = ['todo', 'in_progress', 'to_review', 'validated', 'rejected'];
+const STATUSES = ['todo', 'in_progress', 'to_review', 'validated', 'rejected', 'a_discuter'];
 const STATUS_LABELS: Record<string, string> = {
   todo: 'A faire',
   in_progress: 'En cours',
   to_review: 'A tester',
   validated: 'Valide',
   rejected: 'Rejete',
+  a_discuter: 'A discuter',
+};
+const STATUS_COLORS: Record<string, string> = {
+  todo: '#9ca3af',
+  in_progress: '#58a6ff',
+  to_review: '#d29922',
+  validated: '#3fb950',
+  rejected: '#f85149',
+  a_discuter: '#bc8cff',
 };
 
 interface Props {
@@ -29,6 +38,7 @@ export function ProjectView({ project, onBack }: Props) {
   const [filterSearch, setFilterSearch] = useState('');
   const [filterPriority, setFilterPriority] = useState('');
   const [filterAssigned, setFilterAssigned] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
 
   const currentUser = getCurrentUser();
   const isAdmin = currentUser?.isAdmin ?? false;
@@ -59,7 +69,6 @@ export function ProjectView({ project, onBack }: Props) {
       return;
     }
     const update = { ...task, status: newStatus };
-    // Auto-assign when moving to in_progress
     if (newStatus === 'in_progress' && !task.assignedTo && currentUser) {
       update.assignedTo = currentUser.displayName;
     }
@@ -79,24 +88,31 @@ export function ProjectView({ project, onBack }: Props) {
     loadMembers();
   };
 
+  // Build assignee list from members + any assigned names in tasks
+  const assigneeNames = Array.from(new Set([
+    ...members.map(m => m.userName),
+    ...tasks.map(t => t.assignedTo).filter(Boolean)
+  ])).sort();
+
   const filtered = tasks.filter(t => {
-    if (filterSearch && !t.title.toLowerCase().includes(filterSearch.toLowerCase()) && !t.description?.toLowerCase().includes(filterSearch.toLowerCase())) return false;
+    if (filterSearch && !t.title.toLowerCase().includes(filterSearch.toLowerCase()) && !t.description?.toLowerCase().includes(filterSearch.toLowerCase()) && !String(t.id).includes(filterSearch)) return false;
     if (filterPriority && t.priority !== filterPriority) return false;
+    if (filterStatus && t.status !== filterStatus) return false;
     if (filterAssigned === '_none' && t.assignedTo) return false;
     if (filterAssigned && filterAssigned !== '_none' && t.assignedTo !== filterAssigned) return false;
     return true;
   });
-  const tasksByStatus = (status: string) => filtered.filter(t => t.status === status);
   const nonMembers = allUsers.filter(u => !members.some(m => m.userId === u.id));
 
   return (
-    <div className="app">
+    <div className="app wide">
       <div className="project-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <button className="btn" onClick={onBack}>← Retour</button>
           <h2>{project.name}</h2>
         </div>
         <div className="header-actions">
+          <button className="btn small" onClick={load} title="Rafraichir">↻</button>
           {isAdmin && <button className="btn small" onClick={() => setShowMembers(!showMembers)}>Membres ({members.length})</button>}
           <button className="btn primary" onClick={() => setShowForm(!showForm)}>+ Nouvelle tache</button>
         </div>
@@ -148,69 +164,66 @@ export function ProjectView({ project, onBack }: Props) {
       )}
 
       <div className="filter-bar">
-        <input
-          placeholder="Rechercher..."
-          value={filterSearch}
-          onChange={e => setFilterSearch(e.target.value)}
-          className="filter-input"
-        />
+        <input placeholder="Rechercher..." value={filterSearch} onChange={e => setFilterSearch(e.target.value)} className="filter-input" />
         <select value={filterPriority} onChange={e => setFilterPriority(e.target.value)} className="filter-select">
           <option value="">Toutes priorites</option>
           <option value="high">Haute</option>
           <option value="medium">Moyenne</option>
           <option value="low">Basse</option>
         </select>
+        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="filter-select">
+          <option value="">Tous statuts</option>
+          {STATUSES.map(s => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
+        </select>
         <select value={filterAssigned} onChange={e => setFilterAssigned(e.target.value)} className="filter-select">
           <option value="">Tous</option>
           <option value="_none">Non assigne</option>
-          {members.map(m => <option key={m.id} value={m.userName}>{m.userName}</option>)}
+          {assigneeNames.map(name => <option key={name} value={name}>{name}</option>)}
         </select>
-        {(filterSearch || filterPriority || filterAssigned) && (
-          <button className="btn small" onClick={() => { setFilterSearch(''); setFilterPriority(''); setFilterAssigned(''); }}>Reinitialiser</button>
+        {(filterSearch || filterPriority || filterAssigned || filterStatus) && (
+          <button className="btn small" onClick={() => { setFilterSearch(''); setFilterPriority(''); setFilterAssigned(''); setFilterStatus(''); }}>Reinitialiser</button>
         )}
         <span style={{ color: '#484f58', fontSize: 12, marginLeft: 'auto' }}>{filtered.length}/{tasks.length} taches</span>
       </div>
 
-      <div className="status-columns">
-        {STATUSES.map(status => (
-          <div key={status} className={`status-column col-${status}`}>
-            <h4>{STATUS_LABELS[status]} <span className="count-badge">{tasksByStatus(status).length}</span></h4>
-            {tasksByStatus(status).map(task => (
-              <div
-                key={task.id}
-                className={`task-card priority-${task.priority}`}
-                onClick={() => setSelectedTask(task)}
-              >
-                <div className="task-id">#{task.id}</div>
-                <div className="title">{task.title}</div>
-                {task.description && <div className="description">{task.description}</div>}
-                <div className="meta">
-                  <span>{task.assignedTo || '—'}</span>
-                  <span>{new Date(task.createdAt).toLocaleDateString('fr-CA')}</span>
-                </div>
-                <div style={{ display: 'flex', gap: 4, marginTop: 6, flexWrap: 'wrap' }}>
-                  {STATUSES.filter(s => s !== task.status).map(s => (
-                    <button
-                      key={s}
-                      className="btn small"
-                      onClick={e => { e.stopPropagation(); handleStatusChange(task, s); }}
-                      style={{ fontSize: 10, padding: '2px 6px' }}
-                    >
-                      → {STATUS_LABELS[s]}
-                    </button>
-                  ))}
+      <div className="task-table">
+        <div className="task-table-header">
+          <div className="task-col-info">Tache</div>
+          {STATUSES.map(s => (
+            <div key={s} className="task-col-status" style={{ color: STATUS_COLORS[s] }}>{STATUS_LABELS[s]}</div>
+          ))}
+          <div className="task-col-actions"></div>
+        </div>
+        {filtered.map(task => (
+          <div key={task.id} className={`task-table-row priority-${task.priority}`}>
+            <div className="task-col-info" onClick={() => setSelectedTask(task)}>
+              <span className="task-title"><span className="task-id">#{task.id}</span> {task.title}</span>
+              {task.description && <span className="task-desc">{task.description}</span>}
+              {task.assignedTo && (
+                <span className="task-meta">
+                  <span className="task-tag">{task.assignedTo}</span>
+                </span>
+              )}
+            </div>
+            {STATUSES.map(s => (
+              <div key={s} className="task-col-status">
+                {task.status === s ? (
+                  <span className="status-dot active" style={{ background: STATUS_COLORS[s] }} title={STATUS_LABELS[s]} />
+                ) : (
                   <button
-                    className="btn danger small"
-                    onClick={e => { e.stopPropagation(); handleDelete(task.id); }}
-                    style={{ fontSize: 10, padding: '2px 6px' }}
-                  >
-                    x
-                  </button>
-                </div>
+                    className="status-dot clickable"
+                    title={`Deplacer vers ${STATUS_LABELS[s]}`}
+                    onClick={() => handleStatusChange(task, s)}
+                  />
+                )}
               </div>
             ))}
+            <div className="task-col-actions">
+              <button className="btn danger small" onClick={() => handleDelete(task.id)} style={{ fontSize: 10, padding: '2px 6px' }}>x</button>
+            </div>
           </div>
         ))}
+        {filtered.length === 0 && <div style={{ padding: 20, textAlign: 'center', color: '#484f58' }}>Aucune tache</div>}
       </div>
 
       {selectedTask && (

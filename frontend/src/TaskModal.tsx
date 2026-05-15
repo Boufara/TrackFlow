@@ -5,13 +5,14 @@ import {
   getBranches, getCommits, getCurrentUser,
 } from './api';
 
-const STATUSES = ['todo', 'in_progress', 'to_review', 'validated', 'rejected'];
+const STATUSES = ['todo', 'in_progress', 'to_review', 'validated', 'rejected', 'a_discuter'];
 const STATUS_LABELS: Record<string, string> = {
   todo: 'A faire',
   in_progress: 'En cours',
   to_review: 'A tester',
   validated: 'Valide',
   rejected: 'Rejete',
+  a_discuter: 'A discuter',
 };
 
 interface Props {
@@ -215,7 +216,7 @@ export function TaskModal({ task, projectId, members, onClose }: Props) {
               onChange={e => setNewEntry({ ...newEntry, user: e.target.value })}
             />
             <input
-              placeholder="Note"
+              placeholder="Description (optionnel)"
               style={{ padding: '4px 8px', background: '#0d1117', border: '1px solid #3d444d', borderRadius: 4, color: '#e1e4e8', fontSize: 12, flex: 1 }}
               value={newEntry.note}
               onChange={e => setNewEntry({ ...newEntry, note: e.target.value })}

@@ -289,3 +289,97 @@ header h1 { font-size: 24px; color: #58a6ff; }
 .login-error { color: #f85149; text-align: center; font-size: 14px; }
 
 .header-actions { display: flex; gap: 8px; align-items: center; }
+
+/* Table layout */
+.app.wide { max-width: 1400px; }
+
+.task-table {
+  background: #161b22;
+  border: 1px solid #2d333b;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.task-table-header {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  border-bottom: 1px solid #2d333b;
+  background: #1c2129;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #8b949e;
+}
+
+.task-table-row {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  border-bottom: 1px solid #1e2229;
+  transition: background 0.1s;
+}
+.task-table-row:last-child { border-bottom: none; }
+.task-table-row:hover { background: #1c2129; }
+
+.task-col-info {
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.task-col-info .task-id { font-size: 11px; color: #484f58; }
+.task-col-info .task-title { font-size: 14px; font-weight: 600; color: #e1e4e8; }
+.task-col-info .task-desc { font-size: 12px; color: #8b949e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.task-col-info .task-meta { font-size: 11px; color: #484f58; margin-top: 2px; }
+.task-col-info .task-assigned { color: #58a6ff; }
+.task-col-info .task-tag {
+  display: inline-block;
+  background: #1e3a5f;
+  color: #58a6ff;
+  border-radius: 10px;
+  padding: 1px 8px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.task-col-status {
+  width: 80px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.task-col-actions {
+  width: 40px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.status-dot {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid #3d444d;
+  vertical-align: middle;
+}
+.status-dot.active {
+  border: none;
+  width: 18px;
+  height: 18px;
+  box-shadow: 0 0 6px rgba(255,255,255,0.15);
+}
+.status-dot.clickable {
+  cursor: pointer;
+  background: transparent;
+  transition: background 0.15s, border-color 0.15s;
+  padding: 0;
+  font-size: 0;
+}
+.status-dot.clickable:hover {
+  background: #30363d;
+  border-color: #58a6ff;
+}
