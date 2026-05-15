@@ -208,9 +208,9 @@ header h1 { font-size: 24px; color: var(--accent); }
   letter-spacing: 0.5px;
 }
 
-.priority-high { border-left: 3px solid var(--red); }
-.priority-medium { border-left: 3px solid var(--yellow); }
-.priority-low { border-left: 3px solid var(--green); }
+.priority-high { border-left: 4px solid var(--red); }
+.priority-medium { border-left: 4px solid var(--yellow); }
+.priority-low { border-left: 4px solid var(--green); }
 
 /* Task detail modal */
 .modal-overlay {
@@ -398,12 +398,13 @@ header h1 { font-size: 24px; color: var(--accent); }
   cursor: pointer;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
+  padding: 4px 0;
 }
 .task-col-info .task-id { font-size: 11px; color: var(--text-muted); }
 .task-col-info .task-title { font-size: 14px; font-weight: 600; color: var(--text-primary); }
 .task-col-info .task-desc { font-size: 12px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.task-col-info .task-meta { display: flex; gap: 4px; flex-wrap: wrap; font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.task-col-info .task-meta { display: flex; gap: 6px; flex-wrap: wrap; font-size: 11px; color: var(--text-muted); margin-top: 2px; }
 .task-col-info .task-assigned { color: var(--accent); }
 .task-col-info .task-tag {
   display: inline-block;
