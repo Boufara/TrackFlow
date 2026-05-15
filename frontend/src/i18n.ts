@@ -80,6 +80,7 @@ const fr = {
   from: 'De',
   to: 'À',
   save: 'Sauvegarder',
+  currentBranch: 'Branche actuelle',
 };
 
 const en: typeof fr = {
@@ -161,6 +162,7 @@ const en: typeof fr = {
   from: 'From',
   to: 'To',
   save: 'Save',
+  currentBranch: 'Current branch',
 };
 
 i18n.use(initReactI18next).init({

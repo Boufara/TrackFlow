@@ -22,18 +22,24 @@ export function TaskModal({ task, projectId, members, onClose }: Props) {
   const currentUser = getCurrentUser();
   const [newEntry, setNewEntry] = useState({ startTime: '', endTime: '', note: '' });
   const [branches, setBranches] = useState<string[]>([]);
+  const [currentBranch, setCurrentBranch] = useState('');
   const [commits, setCommits] = useState<GitCommit[]>([]);
   const [selectedBranch, setSelectedBranch] = useState(task.branchName || '');
-  const [showGit, setShowGit] = useState(task.status === 'validated' || task.status === 'to_review');
+  const [showGit] = useState(true);
 
   useEffect(() => {
     getTimeEntries(task.id).then(setEntries);
-    getBranches(projectId).then(setBranches);
+    getBranches(projectId).then(res => { setBranches(res.branches); setCurrentBranch(res.currentBranch); });
   }, [task.id, projectId]);
 
   useEffect(() => {
     if (selectedBranch) {
-      getCommits(projectId, selectedBranch).then(setCommits);
+      getCommits(projectId, selectedBranch).then(c => {
+        setCommits(c);
+        if (c.length > 0 && !form.commitHash) {
+          setForm(f => ({ ...f, commitHash: c[0].hash, branchName: selectedBranch }));
+        }
+      });
     }
   }, [selectedBranch, projectId]);
 
@@ -102,7 +108,6 @@ export function TaskModal({ task, projectId, members, onClose }: Props) {
                 className={`status-btn ${form.status === s ? 'active' : ''}`}
                 onClick={() => {
                   setForm({ ...form, status: s });
-                  if (s === 'validated' || s === 'to_review') setShowGit(true);
                 }}
               >
                 {t(`status.${s}`)}
@@ -132,15 +137,22 @@ export function TaskModal({ task, projectId, members, onClose }: Props) {
         {showGit && (
           <div className="git-section">
             <h4>{t('linkCommit')}</h4>
-            <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+            <div style={{ display: 'flex', gap: 8, marginBottom: 8, alignItems: 'center' }}>
               <select
                 style={{ flex: 1, ...smallInputStyle, padding: '6px 10px', borderRadius: 6 }}
                 value={selectedBranch}
-                onChange={e => { setSelectedBranch(e.target.value); setForm({ ...form, branchName: e.target.value }); }}
+                onChange={e => { setSelectedBranch(e.target.value); setForm({ ...form, branchName: e.target.value, commitHash: e.target.value ? form.commitHash : '' }); }}
               >
                 <option value="">{t('branch')}</option>
-                {branches.map(b => <option key={b} value={b}>{b}</option>)}
+                {[...branches].sort((a, b) => {
+                  if (a === currentBranch) return -1;
+                  if (b === currentBranch) return 1;
+                  return 0;
+                }).map(b => <option key={b} value={b}>{b === currentBranch ? `★ ${b}` : b}</option>)}
               </select>
+              {currentBranch && selectedBranch === currentBranch && (
+                <span style={{ fontSize: 11, color: 'var(--green)', background: 'var(--green-bg)', padding: '2px 8px', borderRadius: 10, whiteSpace: 'nowrap' }}>✓ {t('currentBranch')}</span>
+              )}
             </div>
             {selectedBranch && (
               <div className="commit-list">

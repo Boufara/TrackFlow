@@ -239,6 +239,11 @@ export function ProjectView({ project, onBack }: Props) {
               <div className="task-col-info" onClick={() => setSelectedTask(task)}>
                 <span className="task-title"><span className="task-id">#{task.id}</span> {task.title}</span>
                 {task.description && <span className="task-desc">{task.description}</span>}
+                {(task.branchName || task.commitHash) && (
+                  <span style={{ fontSize: 11, color: 'var(--accent)', fontFamily: 'monospace', opacity: 0.7 }}>
+                    ⎇ {task.branchName || ''}{task.branchName && task.commitHash ? ' : ' : ''}{task.commitHash ? task.commitHash.substring(0, 7) : ''}
+                  </span>
+                )}
                 {(task.assignedTo || (stats && stats.users.length > 0)) && (
                   <span className="task-meta">
                     {task.assignedTo && <span className="task-tag">{task.assignedTo}</span>}
@@ -267,7 +272,7 @@ export function ProjectView({ project, onBack }: Props) {
                 )}
               </div>
               <div className="task-col-actions">
-                <button className="btn danger small" onClick={() => handleDelete(task.id)} style={{ fontSize: 10, padding: '2px 6px' }}>x</button>
+                <button onClick={() => handleDelete(task.id)} style={{ fontSize: 18, background: 'none', border: 'none', cursor: 'pointer', padding: '4px 6px', color: 'var(--red)' }}>✕</button>
               </div>
             </div>
           );

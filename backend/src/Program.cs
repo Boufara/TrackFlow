@@ -300,7 +300,23 @@ app.MapGet("/api/projects/{projectId}/git/branches", async (int projectId, Track
     var output = await proc.StandardOutput.ReadToEndAsync();
     await proc.WaitForExitAsync();
     var branches = output.Split('\n', StringSplitOptions.RemoveEmptyEntries).Select(b => b.Trim()).ToList();
-    return Results.Ok(branches);
+
+    // Get current branch
+    var psiHead = new ProcessStartInfo("git", "rev-parse --abbrev-ref HEAD")
+    {
+        WorkingDirectory = project.RepoPath,
+        RedirectStandardOutput = true,
+        UseShellExecute = false
+    };
+    using var procHead = Process.Start(psiHead);
+    var currentBranch = "";
+    if (procHead is not null)
+    {
+        currentBranch = (await procHead.StandardOutput.ReadToEndAsync()).Trim();
+        await procHead.WaitForExitAsync();
+    }
+
+    return Results.Ok(new { branches, currentBranch });
 }).RequireAuthorization();
 
 app.MapGet("/api/projects/{projectId}/git/commits", async (int projectId, string? branch, TrackFlowDb db) =>

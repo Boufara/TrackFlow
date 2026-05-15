@@ -130,5 +130,5 @@ export interface TimeStats { users: string[]; totalMinutes: number; }
 export const getTimeStats = (projectId: number) => request<Record<number, TimeStats>>(`${API}/projects/${projectId}/time-stats`);
 
 // Git
-export const getBranches = (projectId: number) => request<string[]>(`${API}/projects/${projectId}/git/branches`);
+export const getBranches = (projectId: number) => request<{ branches: string[]; currentBranch: string }>(`${API}/projects/${projectId}/git/branches`);
 export const getCommits = (projectId: number, branch?: string) => request<GitCommit[]>(`${API}/projects/${projectId}/git/commits${branch ? `?branch=${encodeURIComponent(branch)}` : ''}`);
