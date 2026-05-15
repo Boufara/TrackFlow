@@ -293,23 +293,29 @@ app.MapGet("/api/projects/{projectId}/git/branches", async (int projectId, Track
     if (project is null) return Results.NotFound();
     if (!Directory.Exists(project.RepoPath)) return Results.BadRequest("Repo path does not exist");
 
-    var psi = new ProcessStartInfo(@"C:\Program Files\Git\cmd\git.exe", "branch --format=%(refname:short)")
+    var gitExe = File.Exists(@"C:\Program Files\Git\cmd\git.exe") ? @"C:\Program Files\Git\cmd\git.exe" : "git";
+
+    var psi = new ProcessStartInfo(gitExe, "branch --format=%(refname:short)")
     {
         WorkingDirectory = project.RepoPath,
         RedirectStandardOutput = true,
+        RedirectStandardError = true,
         UseShellExecute = false
     };
     using var proc = Process.Start(psi);
     if (proc is null) return Results.Problem("Failed to run git");
     var output = await proc.StandardOutput.ReadToEndAsync();
+    var error = await proc.StandardError.ReadToEndAsync();
     await proc.WaitForExitAsync();
+    if (proc.ExitCode != 0) return Results.Problem($"git branch failed: {error}");
     var branches = output.Split('\n', StringSplitOptions.RemoveEmptyEntries).Select(b => b.Trim()).ToList();
 
     // Get current branch
-    var psiHead = new ProcessStartInfo(@"C:\Program Files\Git\cmd\git.exe", "rev-parse --abbrev-ref HEAD")
+    var psiHead = new ProcessStartInfo(gitExe, "rev-parse --abbrev-ref HEAD")
     {
         WorkingDirectory = project.RepoPath,
         RedirectStandardOutput = true,
+        RedirectStandardError = true,
         UseShellExecute = false
     };
     using var procHead = Process.Start(psiHead);
@@ -333,16 +339,21 @@ app.MapGet("/api/projects/{projectId}/git/commits", async (int projectId, string
         ? "log --all --oneline -50 --format=%H||%s||%an||%ai"
         : $"log {branch} --oneline -50 --format=%H||%s||%an||%ai";
 
-    var psi = new ProcessStartInfo(@"C:\Program Files\Git\cmd\git.exe", args)
+    var gitExe = File.Exists(@"C:\Program Files\Git\cmd\git.exe") ? @"C:\Program Files\Git\cmd\git.exe" : "git";
+
+    var psi = new ProcessStartInfo(gitExe, args)
     {
         WorkingDirectory = project.RepoPath,
         RedirectStandardOutput = true,
+        RedirectStandardError = true,
         UseShellExecute = false
     };
     using var proc = Process.Start(psi);
     if (proc is null) return Results.Problem("Failed to run git");
     var output = await proc.StandardOutput.ReadToEndAsync();
+    var error = await proc.StandardError.ReadToEndAsync();
     await proc.WaitForExitAsync();
+    if (proc.ExitCode != 0) return Results.Problem($"git log failed: {error}");
 
     var commits = output.Split('\n', StringSplitOptions.RemoveEmptyEntries)
         .Select(line =>
