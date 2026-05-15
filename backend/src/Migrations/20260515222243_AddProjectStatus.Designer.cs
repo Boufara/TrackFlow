@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TrackFlow.Data;
@@ -11,9 +12,11 @@ using TrackFlow.Data;
 namespace TrackFlow.Migrations
 {
     [DbContext(typeof(TrackFlowDb))]
-    partial class TrackFlowDbModelSnapshot : ModelSnapshot
+    [Migration("20260515222243_AddProjectStatus")]
+    partial class AddProjectStatus
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

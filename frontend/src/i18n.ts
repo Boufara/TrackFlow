@@ -20,6 +20,12 @@ const fr = {
   wrongPassword: 'Mot de passe incorrect.',
   changeTheme: 'Changer le thème',
 
+  // Project statuses
+  'projectStatus.active': 'Actif',
+  'projectStatus.on_hold': 'En pause',
+  'projectStatus.completed': 'Terminé',
+  'projectStatus.archived': 'Archivé',
+
   // Login
   login: 'Connexion',
   username: "Nom d'utilisateur",
@@ -107,6 +113,12 @@ const en: typeof fr = {
   projectNameMismatch: 'Project name does not match.',
   wrongPassword: 'Wrong password.',
   changeTheme: 'Change theme',
+
+  // Project statuses
+  'projectStatus.active': 'Active',
+  'projectStatus.on_hold': 'On hold',
+  'projectStatus.completed': 'Completed',
+  'projectStatus.archived': 'Archived',
 
   // Login
   login: 'Login',

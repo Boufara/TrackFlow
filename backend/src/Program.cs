@@ -166,6 +166,7 @@ app.MapPut("/api/projects/{id}", async (int id, Project input, TrackFlowDb db, C
     project.Name = input.Name;
     project.Description = input.Description;
     project.RepoPath = input.RepoPath;
+    project.Status = input.Status;
     await db.SaveChangesAsync();
     return Results.Ok(project);
 }).RequireAuthorization();

@@ -147,11 +147,14 @@ function App() {
                         </div>
                       </div>
                     )}
-                    {isAdmin && (
-                      <button className="btn danger small" onClick={e => { e.stopPropagation(); setDeleteConfirm({ project: p, name: '', password: '' }); setDeleteError(''); }} style={{ marginLeft: 8 }}>
-                        {t('delete')}
-                      </button>
-                    )}
+                    <div className="project-actions">
+                      <span className={`project-status-badge ps-${p.status || 'active'}`}>{t(`projectStatus.${p.status || 'active'}`)}</span>
+                      {isAdmin && (
+                        <button className="btn danger small" onClick={e => { e.stopPropagation(); setDeleteConfirm({ project: p, name: '', password: '' }); setDeleteError(''); }}>
+                          {t('delete')}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               );

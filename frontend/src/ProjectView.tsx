@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Project, TaskItem, ProjectMember, AppUser, TimeStats } from './api';
-import { getTasks, createTask, deleteTask, updateTask, getMembers, addMember, removeMember, getUsers, getCurrentUser, getTimeStats } from './api';
+import { getTasks, createTask, deleteTask, updateTask, updateProject, getMembers, addMember, removeMember, getUsers, getCurrentUser, getTimeStats } from './api';
 import { TaskModal } from './TaskModal';
 
 const STATUSES = ['a_discuter', 'todo', 'in_progress', 'to_review', 'validated', 'rejected'];
@@ -49,6 +49,15 @@ export function ProjectView({ project, onBack }: Props) {
   const [timeStats, setTimeStats] = useState<Record<number, TimeStats>>({});
   const [sortKey, setSortKey] = useState<SortKey>('priority');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
+  const [projectStatus, setProjectStatus] = useState(project.status || 'active');
+  const [showStatusPopup, setShowStatusPopup] = useState(false);
+
+  useEffect(() => {
+    if (!showStatusPopup) return;
+    const close = () => setShowStatusPopup(false);
+    document.addEventListener('click', close);
+    return () => document.removeEventListener('click', close);
+  }, [showStatusPopup]);
 
 
   const currentUser = getCurrentUser();
@@ -101,6 +110,14 @@ export function ProjectView({ project, onBack }: Props) {
     loadMembers();
   };
 
+  const handleProjectStatus = async (status: string) => {
+    await updateProject(project.id, { ...project, status });
+    setProjectStatus(status);
+    setShowStatusPopup(false);
+  };
+
+  const PROJECT_STATUSES = ['active', 'on_hold', 'completed', 'archived'];
+
   const toggleSort = (key: SortKey) => {
     if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
     else { setSortKey(key); setSortDir('desc'); }
@@ -143,8 +160,28 @@ export function ProjectView({ project, onBack }: Props) {
           <h2>{project.name}</h2>
         </div>
         <div className="header-actions">
-          <button className="btn small" onClick={load} title={t('refresh')}>↻</button>
           {isAdmin && <button className="btn small" onClick={() => setShowMembers(!showMembers)}>{t('members')} ({members.length}) {showMembers ? '▲' : '▼'}</button>}
+          <div style={{ position: 'relative' }}>
+            <span
+              className={`project-status-badge ps-${projectStatus} ${isAdmin ? 'clickable' : ''}`}
+              onClick={e => { e.stopPropagation(); if (isAdmin) setShowStatusPopup(!showStatusPopup); }}
+            >
+              {t(`projectStatus.${projectStatus}`)}
+            </span>
+            {showStatusPopup && isAdmin && (
+              <div className="status-popup" style={{ right: 0, left: 'auto' }}>
+                {PROJECT_STATUSES.map(s => (
+                  <button
+                    key={s}
+                    className={`status-popup-item ps-${s} ${s === projectStatus ? 'active' : ''}`}
+                    onClick={() => handleProjectStatus(s)}
+                  >
+                    {t(`projectStatus.${s}`)}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           <button className="btn primary small" onClick={() => setShowForm(!showForm)}>{t('newTask')}</button>
         </div>
       </div>
@@ -197,6 +234,7 @@ export function ProjectView({ project, onBack }: Props) {
       )}
 
       <div className="filter-bar">
+        <button className="btn small" onClick={load} title={t('refresh')}>↻</button>
         <input placeholder={t('search')} value={filterSearch} onChange={e => setFilterSearch(e.target.value)} className="filter-input" />
         <select value={filterPriority} onChange={e => setFilterPriority(e.target.value)} className="filter-select">
           <option value="">{t('allPriorities')}</option>
