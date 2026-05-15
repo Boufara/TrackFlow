@@ -134,7 +134,9 @@ header h1 { font-size: 24px; color: #58a6ff; }
   transition: border-color 0.15s;
 }
 .task-card:hover { border-color: #58a6ff; }
+.task-card .task-id { font-size: 11px; color: #484f58; margin-bottom: 2px; }
 .task-card .title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+.task-card .description { font-size: 11px; color: #8b949e; margin-bottom: 6px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .task-card .meta { font-size: 11px; color: #484f58; display: flex; justify-content: space-between; }
 
 .priority-high { border-left: 3px solid #f85149; }
@@ -218,6 +220,35 @@ header h1 { font-size: 24px; color: #58a6ff; }
 .commit-item .msg { color: #e1e4e8; flex: 1; }
 .commit-item .author { color: #8b949e; min-width: 80px; text-align: right; }
 
+/* Filter bar */
+.filter-bar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  background: #161b22;
+  border: 1px solid #2d333b;
+  border-radius: 8px;
+}
+.filter-input {
+  padding: 6px 10px;
+  background: #0d1117;
+  border: 1px solid #3d444d;
+  border-radius: 6px;
+  color: #e1e4e8;
+  font-size: 13px;
+  width: 200px;
+}
+.filter-select {
+  padding: 6px 10px;
+  background: #0d1117;
+  border: 1px solid #3d444d;
+  border-radius: 6px;
+  color: #e1e4e8;
+  font-size: 13px;
+}
+
 .count-badge {
   display: inline-block;
   background: #30363d;
@@ -227,3 +258,34 @@ header h1 { font-size: 24px; color: #58a6ff; }
   font-size: 12px;
   margin-left: 6px;
 }
+
+/* Login page */
+.login-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+.login-form {
+  background: #161b22;
+  border: 1px solid #2d333b;
+  border-radius: 10px;
+  padding: 32px;
+  width: 350px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.login-form h1 { color: #58a6ff; text-align: center; margin-bottom: 8px; }
+.login-form input {
+  padding: 10px 14px;
+  background: #0d1117;
+  border: 1px solid #3d444d;
+  border-radius: 6px;
+  color: #e1e4e8;
+  font-size: 14px;
+}
+.login-form .btn { width: 100%; padding: 10px; font-size: 15px; }
+.login-error { color: #f85149; text-align: center; font-size: 14px; }
+
+.header-actions { display: flex; gap: 8px; align-items: center; }

@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import type { TaskItem, TimeEntry, GitCommit } from './api';
+import type { TaskItem, TimeEntry, GitCommit, ProjectMember } from './api';
 import {
   updateTask, getTimeEntries, createTimeEntry, deleteTimeEntry,
-  getBranches, getCommits,
+  getBranches, getCommits, getCurrentUser,
 } from './api';
 
 const STATUSES = ['todo', 'in_progress', 'to_review', 'validated', 'rejected'];
@@ -17,13 +17,15 @@ const STATUS_LABELS: Record<string, string> = {
 interface Props {
   task: TaskItem;
   projectId: number;
+  members: ProjectMember[];
   onClose: () => void;
 }
 
-export function TaskModal({ task, projectId, onClose }: Props) {
+export function TaskModal({ task, projectId, members, onClose }: Props) {
   const [form, setForm] = useState(task);
   const [entries, setEntries] = useState<TimeEntry[]>([]);
-  const [newEntry, setNewEntry] = useState({ user: '', startTime: '', endTime: '', note: '' });
+  const currentUser = getCurrentUser();
+  const [newEntry, setNewEntry] = useState({ user: currentUser?.displayName || '', startTime: '', endTime: '', note: '' });
   const [branches, setBranches] = useState<string[]>([]);
   const [commits, setCommits] = useState<GitCommit[]>([]);
   const [selectedBranch, setSelectedBranch] = useState(task.branchName || '');
@@ -124,11 +126,14 @@ export function TaskModal({ task, projectId, onClose }: Props) {
           </div>
           <div className="field" style={{ flex: 1 }}>
             <label>Assigne a</label>
-            <input
+            <select
               style={{ width: '100%', padding: '8px 12px', background: '#0d1117', border: '1px solid #3d444d', borderRadius: 6, color: '#e1e4e8' }}
               value={form.assignedTo || ''}
               onChange={e => setForm({ ...form, assignedTo: e.target.value })}
-            />
+            >
+              <option value="">Non assigne</option>
+              {members.map(m => <option key={m.id} value={m.userName}>{m.userName}</option>)}
+            </select>
           </div>
         </div>
 

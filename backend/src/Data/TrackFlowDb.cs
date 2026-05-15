@@ -10,6 +10,8 @@ public class TrackFlowDb : DbContext
     public DbSet<Project> Projects => Set<Project>();
     public DbSet<TaskItem> Tasks => Set<TaskItem>();
     public DbSet<TimeEntry> TimeEntries => Set<TimeEntry>();
+    public DbSet<User> Users => Set<User>();
+    public DbSet<ProjectMember> ProjectMembers => Set<ProjectMember>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -51,6 +53,29 @@ public class TrackFlowDb : DbContext
             e.Property(t => t.EndTime).HasColumnName("end_time");
             e.Property(t => t.Note).HasColumnName("note");
             e.HasOne(t => t.Task).WithMany().HasForeignKey(t => t.TaskId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<User>(e =>
+        {
+            e.ToTable("users");
+            e.Property(u => u.Id).HasColumnName("id");
+            e.Property(u => u.Username).HasColumnName("username");
+            e.Property(u => u.PasswordHash).HasColumnName("password_hash");
+            e.Property(u => u.DisplayName).HasColumnName("display_name");
+            e.Property(u => u.IsAdmin).HasColumnName("is_admin");
+            e.Property(u => u.CreatedAt).HasColumnName("created_at");
+            e.HasIndex(u => u.Username).IsUnique();
+        });
+
+        modelBuilder.Entity<ProjectMember>(e =>
+        {
+            e.ToTable("project_members");
+            e.Property(m => m.Id).HasColumnName("id");
+            e.Property(m => m.ProjectId).HasColumnName("project_id");
+            e.Property(m => m.UserId).HasColumnName("user_id");
+            e.HasOne(m => m.Project).WithMany().HasForeignKey(m => m.ProjectId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(m => m.User).WithMany().HasForeignKey(m => m.UserId).OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(m => new { m.ProjectId, m.UserId }).IsUnique();
         });
     }
 }
